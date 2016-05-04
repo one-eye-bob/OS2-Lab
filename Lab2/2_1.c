@@ -9,9 +9,12 @@
 
 int main(int argc, char** argv){
 	printf("A nice welcome message\n");
-	int c, MAX_FORKS; 
+	int c, MAX_FORKS;
+	printf("st");
+	int fr=0; //failratio in percent
+	printf("ab");
 	//parse input
-	while ((c = getopt(argc, argv, "n:")) != -1){
+	while ((c = getopt(argc, argv, "nf:")) != -1){
 		switch(c){
 		case 'n':
 			MAX_FORKS=atoi(optarg);
@@ -20,24 +23,32 @@ int main(int argc, char** argv){
 				MAX_FORKS=5;
 			}
 			break;
+		case 'f':
+			printf("a");
+			fr = atoi(optarg);
+			if (fr < 0 || fr > 100) {
+				fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+				fr=0;
+			}
+			break;
 		default:
 			fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
-		}	
+		}
 	}
 	
 	//start creating primary processes
 	backup(MAX_FORKS);
 	printf("start processing\n");
 	//start processing requests
-	server();
+	server(fr);
 	printf("done processing\n");
-	exit(0);	
+	exit(0);
 
 }
-int server(){
+int server(int fr){
 	//reserve memory for reading request files
 	char buffer[255];
-	struct dirent* entry; 
+	struct dirent* entry;
 	while(1){
 		//open directory stream
 		DIR *requestdir	= opendir("./requests");
@@ -82,7 +93,7 @@ int backup(int MAX_FORKS) {
 			return 0;
 		}
 		else if(pid < 0 && num_forks > MAX_FORKS){
-			//gracefully degrade and start request processing without backup 
+			//gracefully degrade and start request processing without backup
 			printf("i am the parent process with pid %i\n",getpid());
 			perror("Maximum number of retries to create child exceeded, backup process is now doing processing");
 			return pid;
