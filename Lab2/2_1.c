@@ -1,9 +1,11 @@
 #define _BSD_SOURCE
 #include<stdio.h>
+#include<dirent.h>
 #include<unistd.h>
 #include<sys/wait.h>
 #include<stdlib.h>
 #include<time.h>
+#include <string.h>
 
 int main(int argc, char** argv){
 	printf("A nice welcome message\n");
@@ -25,10 +27,38 @@ int main(int argc, char** argv){
 	
 	//start creating primary processes
 	backup(MAX_FORKS);
+	printf("start processing\n");
 	//start processing requests
-	printf("server %d\n", getpid());
+	server();
+	printf("done processing\n");
 	exit(0);	
 
+}
+int server(){
+	//reserve memory for reading request files
+	char buffer[255];
+	struct dirent* entry; 
+	while(1){
+		//open directory stream
+		DIR *requestdir	= opendir("./requests");
+		while( (entry = readdir(requestdir)) != NULL){
+			if (entry->d_type != DT_REG){
+				continue;
+			}
+			char filepath[100];
+			strcpy(filepath, "requests/");
+			strncat(filepath, entry->d_name, 22);
+			//only parse regular files
+			FILE* requestFile = fopen(filepath, "r");
+			//only read in first line (max 255 chars), since this is only pseudo code
+			char* request = fgets(buffer, 255, requestFile);
+			printf("server [%d] req: %s\n", getpid(), entry->d_name);
+			usleep(500000);
+			fclose(requestFile);
+			unlink(filepath);
+		}
+		closedir(requestdir);
+	}
 }
 int backup(int MAX_FORKS) {
 	int pid;
@@ -58,7 +88,9 @@ int backup(int MAX_FORKS) {
 			return pid;
 		}
 		//wait for crash of primary
-		pid = waitpid(pid,NULL,0);
+		printf("waiting %i\n", pid);
+		pid = waitpid((pid_t)pid,&status,0);
+		printf("done waiting%i\n", pid);
 		//handle waitpid error
 		if(pid < 0){
 			perror("Error while trying to wait for child");
@@ -66,3 +98,4 @@ int backup(int MAX_FORKS) {
 	}
 	return 0;
 }
+

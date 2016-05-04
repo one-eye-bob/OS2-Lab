@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=--std=c99 -Wall -Werror -O1
+CFLAGS=-D_BSD_SOURCE --std=c99 -Wall -Werror -O1
 EXEC=run
 
 prog: 2_1.o
