@@ -6,33 +6,32 @@
 #include<stdlib.h>
 #include<time.h>
 #include <string.h>
+#include <stdbool.h>
 
 int main(int argc, char** argv){
 	printf("A nice welcome message\n");
 	int c, MAX_FORKS;
-	printf("st");
 	int fr=0; //failratio in percent
-	printf("ab");
+	
 	//parse input
-	while ((c = getopt(argc, argv, "nf:")) != -1){
+	while ((c = getopt(argc, argv, "n:f:")) != -1){
 		switch(c){
-		case 'n':
-			MAX_FORKS=atoi(optarg);
-			if(MAX_FORKS < 1 || MAX_FORKS >50){
-				fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
-				MAX_FORKS=5;
-			}
-			break;
-		case 'f':
-			printf("a");
-			fr = atoi(optarg);
-			if (fr < 0 || fr > 100) {
-				fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
-				fr=0;
-			}
-			break;
-		default:
-			fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+			case 'n':
+				MAX_FORKS=atoi(optarg);
+				if(MAX_FORKS < 1 || MAX_FORKS >50){
+					fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					MAX_FORKS=5;
+				}
+				break;
+			case 'f':
+				fr = atoi(optarg);
+				if (fr < 0 || fr > 100) {
+					fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					fr=0;
+				}
+				break;
+			default:
+				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
 		}
 	}
 	
@@ -40,9 +39,9 @@ int main(int argc, char** argv){
 	backup(MAX_FORKS);
 	printf("start processing\n");
 	//start processing requests
-	server(fr);
+	int ret = server(fr);
 	printf("done processing\n");
-	exit(0);
+	exit(ret);
 
 }
 int server(int fr){
@@ -61,6 +60,22 @@ int server(int fr){
 			strncat(filepath, entry->d_name, 22);
 			//only parse regular files
 			FILE* requestFile = fopen(filepath, "r");
+			
+			//create artificial crash if specified by -f and filename contains "fail"
+			const char failstr[10] = "fail";
+			char* ret;
+			ret = strstr(entry->d_name,failstr);
+			printf("nofail: %s %s \n", ret, entry->d_name);
+			if(fr > 0 && ret) {
+				//init rng
+				srand((unsigned) time(NULL));
+				int r = rand() % 100;
+				if (r >= fr) {
+					printf("child process failed!\n");
+					return -1;
+				}
+			}
+			
 			//only read in first line (max 255 chars), since this is only pseudo code
 			char* request = fgets(buffer, 255, requestFile);
 			printf("server [%d] req: %s\n", getpid(), entry->d_name);

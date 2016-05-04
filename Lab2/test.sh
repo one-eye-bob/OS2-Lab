@@ -3,17 +3,25 @@ success=0
 failure=0
 NOW="$(date)"
 echo Starting test run at $NOW >> log.txt
-for i in `seq 1 5`
+make
+./run -n 10 -f 50 &
+for i in `seq 1 100`
 do
-	make 
-	#generate random MAX_FORKS in [0,100[ for testing
-	./run -n $((RANDOM % 100))
+	var=$RANDOM
+	var="$[ $var % 100 ]"
+	if [ $var -ge 60 ]
+	then
+		touch "requests/fail$i"
+	else
+		touch "requests/$i"
+	fi
 	if [ 0 -eq $? ]
 	then
 		success=$((1 + success))
 	else
-		failure=$((1+ failure))	
+		failure=$((1+ failure))
 	fi
 
 done
+#kill -9 $!
 echo "success: "$success", failure: "$failure>> log.txt
