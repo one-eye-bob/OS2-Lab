@@ -1,14 +1,17 @@
 #!/bin/bash
-echo "testing 1_2"
-POSVAL=0
-NEGVAL=0
+success=0
+failure=0
 NOW="$(date)"
 echo Starting test run at $NOW >> log.txt
-for i in 1 2 3 4 5; do
+for i in `seq 1 5`
+do
 	make exec
-	RETVAL=$?
-	[ $RETVAL -eq 0 ] && echo 'Success' >> log.txt && let POSVAL+=1
-	[ $RETVAL -ne 0 ] && echo 'Failure' >> log.txt && let NEGVAL+=1
-done
+	if [ 0 -eq $? ]
+	then
+		success=$((1 + success))
+	else
+		failure=$((1+ failure))	
+	fi
 
-echo Finished test run... Counting $POSVAL successes and $NEGVAL failures >> log.txt
+done
+echo "success: "$success", failure: "$failure>> log.txt
