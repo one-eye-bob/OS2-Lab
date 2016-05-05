@@ -9,9 +9,11 @@ prog: 2_1.o
 	$(CC) -c 2_1.c
 
 exec: prog
+	mkdir requests/
 	./$(EXEC)
 
 test: prog
+	mkdir requests/
 	./test.sh
 
 .PHONY: clean
@@ -19,4 +21,5 @@ test: prog
 clean:
 	echo "clean starts"
 	-rm *.o $(EXEC) log.txt
+	rm -rf requests/
 	echo "clean finished"

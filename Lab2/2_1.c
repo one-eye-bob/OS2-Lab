@@ -37,6 +37,8 @@ int main(int argc, char** argv){
 	
 	//start creating primary processes
 	backup(MAX_FORKS);
+	//init rng after backup has been done to get different seeds
+	srand(getpid());
 	printf("start processing\n");
 	//start processing requests
 	int ret = server(fr);
@@ -65,10 +67,7 @@ int server(int fr){
 			const char failstr[10] = "fail";
 			char* ret;
 			ret = strstr(entry->d_name,failstr);
-			printf("nofail: %s %s \n", ret, entry->d_name);
 			if(fr > 0 && ret) {
-				//init rng
-				srand((unsigned) time(NULL));
 				int r = rand() % 100;
 				if (r >= fr) {
 					printf("child process failed!\n");
