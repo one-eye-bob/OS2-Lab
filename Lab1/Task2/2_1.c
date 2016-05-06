@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 		}
 	}
 	
-	//start creating primary processes
+	//start creating processes
 	backup(MAX_FORKS);
 	//init rng after backup has been done to get different seeds
 	srand(getpid());

@@ -9,11 +9,11 @@ prog: 2_1.o
 	$(CC) -c 2_1.c
 
 exec: prog
-	mkdir requests/
+	mkdir -p requests/
 	./$(EXEC)
 
 test: prog
-	mkdir requests/
+	mkdir -p requests/
 	./test.sh
 
 .PHONY: clean
