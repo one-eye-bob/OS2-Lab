@@ -13,7 +13,8 @@ int main(int argc, char** argv){
 	int c, MAX_FORKS;
 	int fr=0; //failratio in percent
 	
-	//parse input
+	//parse input: n sets maximum number of server spawning attempts
+	//f: fail ratio
 	while ((c = getopt(argc, argv, "n:f:")) != -1){
 		switch(c){
 			case 'n':
@@ -53,14 +54,16 @@ int server(int fr){
 	while(1){
 		//open directory stream
 		DIR *requestdir	= opendir("./requests");
+		//read in and process files (=requests)
 		while( (entry = readdir(requestdir)) != NULL){
+			//only parse regular files
 			if (entry->d_type != DT_REG){
 				continue;
 			}
+			//open request file
 			char filepath[100];
 			strcpy(filepath, "requests/");
 			strncat(filepath, entry->d_name, 22);
-			//only parse regular files
 			FILE* requestFile = fopen(filepath, "r");
 			
 			//create artificial crash if specified by -f and filename contains "fail"
@@ -79,6 +82,7 @@ int server(int fr){
 			char* request = fgets(buffer, 255, requestFile);
 			printf("server [%d] req: %s\n", getpid(), entry->d_name);
 			usleep(500000);
+			//close and delete request files
 			fclose(requestFile);
 			unlink(filepath);
 		}
