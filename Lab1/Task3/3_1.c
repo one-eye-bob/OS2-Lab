@@ -7,6 +7,7 @@
 #include<time.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 
 int main(int argc, char** argv){
 	printf("A nice welcome message\n");
@@ -47,7 +48,7 @@ int main(int argc, char** argv){
 	exit(ret);
 
 }
-int server(int fr, int fd){
+int server(int fr, int* fd){
 	//reserve memory for reading request files
 	char buffer[255];
 	struct dirent* entry;
@@ -89,7 +90,7 @@ int server(int fr, int fd){
 		closedir(requestdir);
 	}
 }
-int backup(int MAX_FORKS, int fd) {
+int backup(int MAX_FORKS, int* fd) {
 	int pid;
 	int status;
 	int sleep_status;
@@ -100,6 +101,8 @@ int backup(int MAX_FORKS, int fd) {
 		num_forks+=1;
 		printf("creating child...\n");
 		pipe(fd);
+		//ignore the Signal
+		signal(SIGPIPE, SIG_IGN);
 		pid = fork();
 		//handle fork error
 		if(pid < 0) {
@@ -107,7 +110,7 @@ int backup(int MAX_FORKS, int fd) {
 		}
 		//child process(primary)
 		if(pid == 0) {
-			close(fd[1]);
+			close(fd[0]);
 			printf("i am the child process with pid %i\n",getpid());
 			//return to start request processing
 			return 0;
@@ -119,7 +122,8 @@ int backup(int MAX_FORKS, int fd) {
 			return pid;
 		}
 
-		close(fd[0]);
+			printf("i am the parent process with pid %i\n",getpid());
+		close(fd[1]);
 		//wait for crash of primary
 		printf("waiting %i\n", pid);
 		pid = waitpid((pid_t)pid,&status,0);
@@ -132,7 +136,32 @@ int backup(int MAX_FORKS, int fd) {
 	return 0;
 }
 
-int backup_terminated(int fd){
-	int ret = write(fd, "hello", 5);
-	printf("write feedback %i",ret);
+int backup_terminated(int* fd){
+	char c[] = "test";
+	int ret = write(fd[1], c, strlen(c));
+	//printf("write feedback %i \n",ret);
+	if(ret == -1){
+		 if(errno == EPIPE)
+		    printf("EPIPE\n");
+		if(errno == EAGAIN)
+	    	printf("EAGAIN\n");
+		  if(errno == EBADF)
+		    printf("EBADF\n");
+		  if(errno == EDESTADDRREQ)
+		    printf("EDESTADDRREQ\n");
+		  if(errno == EDQUOT)
+		    printf("EDQUOT\n");
+		  if(errno == EFAULT)
+		    printf("EFAULT\n");
+		  if(errno == EFBIG)
+		    printf("EFBIG\n");
+		  if(errno == EINTR)
+		    printf("EINTR\n");
+		  if(errno == EINVAL)
+		    printf("EINVAL\n");
+		  if(errno == EIO)
+		    printf("EIO\n");
+		  if(errno == ENOSPC)
+		    printf("ENOSPC\n");	  
+	}
 }
