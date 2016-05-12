@@ -16,9 +16,12 @@ int backup_terminated(int* fd){
 	char c[] = "test";
 	int ret = write(fd[1], c, strlen(c)+1);
 	//printf("write feedback %i \n",ret);
+	char arg1[10], arg2[10];
+	sprintf (arg1 , "%s%d" , "-n " , MAX_FORKS);
+	sprintf (arg2 , "%s%d" , "-f " , fr);
 	if(ret == -1){
 		 if(errno == EPIPE){
-		    execl("run", "run", "-n 5", "-f 50", (char*)0 );
+		    execl("run", "run", arg1, arg2, (char*)0 );
 		    
 		   // printf("EPIPE\n");
 		 }
@@ -55,7 +58,7 @@ int server(int fr, int* fd){
 		//open directory stream
 		DIR *requestdir	= opendir("./requests");
 		while( (entry = readdir(requestdir)) != NULL){
-			
+
 		//call backup terminated before opening a new request
 			backup_terminated(fd);
 			if (entry->d_type != DT_REG){
@@ -163,7 +166,7 @@ int main(int argc, char** argv){
 				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
 		}
 	}
-	
+//	printf("##############################%i, %i############################",MAX_FORKS, fr);
 	//start creating processes
 	backup(MAX_FORKS, fd);
 	//init rng after backup has been done to get different seeds
