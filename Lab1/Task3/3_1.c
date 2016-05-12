@@ -9,56 +9,55 @@
 #include <stdbool.h>
 #include <errno.h>
 
-int main(int argc, char** argv){
-	printf("A nice welcome message\n");
-	int c, MAX_FORKS;
-	int fr=0; //failratio in percent
-	int fd[2];
-	
-	//parse input
-	while ((c = getopt(argc, argv, "n:f:")) != -1){
-		switch(c){
-			case 'n':
-				MAX_FORKS=atoi(optarg);
-				if(MAX_FORKS < 1 || MAX_FORKS >50){
-					fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
-					MAX_FORKS=5;
-				}
-				break;
-			case 'f':
-				fr = atoi(optarg);
-				if (fr < 0 || fr > 100) {
-					fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
-					fr=0;
-				}
-				break;
-			default:
-				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
-		}
-	}
-	
-	//start creating processes
-	backup(MAX_FORKS, fd);
-	//init rng after backup has been done to get different seeds
-	srand(getpid());
-	printf("start processing\n");
-	//start processing requests
-	int ret = server(fr, fd);
-	printf("done processing\n");
-	exit(ret);
+int MAX_FORKS;
+int fr=0; //failratio in percent
 
+int backup_terminated(int* fd){
+	char c[] = "test";
+	int ret = write(fd[1], c, strlen(c)+1);
+	//printf("write feedback %i \n",ret);
+	if(ret == -1){
+		 if(errno == EPIPE){
+		    execl("run", "run", "-n 5", "-f 50", (char*)0 );
+		    
+		   // printf("EPIPE\n");
+		 }
+		if(errno == EAGAIN)
+	    	printf("EAGAIN\n");
+		  if(errno == EBADF)
+		    printf("EBADF\n");
+		  if(errno == EDESTADDRREQ)
+		    printf("EDESTADDRREQ\n");
+		  if(errno == EDQUOT)
+		    printf("EDQUOT\n");
+		  if(errno == EFAULT)
+		    printf("EFAULT\n");
+		  if(errno == EFBIG)
+		    printf("EFBIG\n");
+		  if(errno == EINTR)
+		    printf("EINTR\n");
+		  if(errno == EINVAL)
+		    printf("EINVAL\n");
+		  if(errno == EIO)
+		    printf("EIO\n");
+		  if(errno == ENOSPC)
+		    printf("ENOSPC\n");	  
+	}
 }
+
 int server(int fr, int* fd){
 	//reserve memory for reading request files
 	char buffer[255];
 	struct dirent* entry;
 	while(1){
-		//call backup terminated before opening a new request
-		int ret = backup_terminated(fd);
+		
 
 		//open directory stream
 		DIR *requestdir	= opendir("./requests");
 		while( (entry = readdir(requestdir)) != NULL){
+			
+		//call backup terminated before opening a new request
+			backup_terminated(fd);
 			if (entry->d_type != DT_REG){
 				continue;
 			}
@@ -90,6 +89,7 @@ int server(int fr, int* fd){
 		closedir(requestdir);
 	}
 }
+
 int backup(int MAX_FORKS, int* fd) {
 	int pid;
 	int status;
@@ -136,32 +136,42 @@ int backup(int MAX_FORKS, int* fd) {
 	return 0;
 }
 
-int backup_terminated(int* fd){
-	char c[] = "test";
-	int ret = write(fd[1], c, strlen(c));
-	//printf("write feedback %i \n",ret);
-	if(ret == -1){
-		 if(errno == EPIPE)
-		    printf("EPIPE\n");
-		if(errno == EAGAIN)
-	    	printf("EAGAIN\n");
-		  if(errno == EBADF)
-		    printf("EBADF\n");
-		  if(errno == EDESTADDRREQ)
-		    printf("EDESTADDRREQ\n");
-		  if(errno == EDQUOT)
-		    printf("EDQUOT\n");
-		  if(errno == EFAULT)
-		    printf("EFAULT\n");
-		  if(errno == EFBIG)
-		    printf("EFBIG\n");
-		  if(errno == EINTR)
-		    printf("EINTR\n");
-		  if(errno == EINVAL)
-		    printf("EINVAL\n");
-		  if(errno == EIO)
-		    printf("EIO\n");
-		  if(errno == ENOSPC)
-		    printf("ENOSPC\n");	  
+
+int main(int argc, char** argv){
+	printf("A nice welcome message\n");
+	int c; 
+	int fd[2];
+	
+	//parse input
+	while ((c = getopt(argc, argv, "n:f:")) != -1){
+		switch(c){
+			case 'n':
+				MAX_FORKS=atoi(optarg);
+				if(MAX_FORKS < 1 || MAX_FORKS >50){
+					fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					MAX_FORKS=5;
+				}
+				break;
+			case 'f':
+				fr = atoi(optarg);
+				if (fr < 0 || fr > 100) {
+					fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					fr=0;
+				}
+				break;
+			default:
+				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+		}
 	}
+	
+	//start creating processes
+	backup(MAX_FORKS, fd);
+	//init rng after backup has been done to get different seeds
+	srand(getpid());
+	printf("start processing\n");
+	//start processing requests
+	int ret = server(fr, fd);
+	printf("done processing\n");
+	exit(ret);
+
 }
