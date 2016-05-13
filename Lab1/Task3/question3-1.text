@@ -1,0 +1,11 @@
+Where do you see problems with your new program version?
+In case that the parent couldnt create a child after MAX_FORK attempts, the program will no longer have a backup process whenever it fails.
+
+Which kinds of errors/failures does your “service” survive now?
+The service can survive upto MAX_FORK failures while attempting to create a primary server. The program can survive when the backup process crashes, then the primary process will take the role of as a backup process and will restart the program again.
+
+Is there some kind of maximum time frame that your “service” can run before it must be restarted?
+The program depends on the life cycle of the backup process, when it crashes the program will start again.
+
+How would you improve the architecture and/or your implementation for productive use?
+One could imporve the architecture by introducing multiple servers that work parallel to each other.
