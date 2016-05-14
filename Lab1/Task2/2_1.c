@@ -9,6 +9,8 @@
 #include <stdbool.h>
 
 void logThis(char* text, int arg){
+	int ret=0;
+
 	// Get the log file or create a new one	
 	FILE *logFile = fopen("log.txt", "a");
 	
@@ -20,22 +22,38 @@ void logThis(char* text, int arg){
 
 	// The string to be printed 
 	char logText[100]; 
-	sprintf(logText, text, arg);
-	
+	ret = sprintf(logText, text, arg);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
 	// Print the string in the log file
-	fprintf(logFile, "%s", logText);
-	
+	ret = fprintf(logFile, "%s", logText);
+	if (ret < 0){
+		perror("Error: fprintf could not write\n");
+		return;
+	}
 	// Close the log file
-	fclose(logFile);
+	ret = fclose(logFile);
+	if (ret < 0){
+		perror("Error: could not close file\n");
+		return;
+	}
 }
 
 int server(int fr){
 	//reserve memory for reading request files
 	char buffer[255];
 	struct dirent* entry;
+	int ret=0;
 	while(1){
 		//open directory stream
 		DIR *requestdir	= opendir("./requests");
+		if (requestdir == NULL){
+			perror("Error: could not open directory!\n");
+			return -1;
+		}
+
 		//read in and process files (=requests)
 		while( (entry = readdir(requestdir)) != NULL){
 			//only parse regular files
@@ -47,12 +65,15 @@ int server(int fr){
 			strcpy(filepath, "requests/");
 			strncat(filepath, entry->d_name, 22);
 			FILE* requestFile = fopen(filepath, "r");
-			
+			if (requestFile == NULL){
+				perror("Error: could not open file!\n");
+				continue;
+			}
 			//create artificial crash if specified by -f and filename contains "fail"
 			const char failstr[10] = "fail";
-			char* ret;
-			ret = strstr(entry->d_name,failstr);
-			if(fr > 0 && ret) {
+			char* cret;
+			cret = strstr(entry->d_name,failstr);
+			if(fr > 0 && cret) {
 				int r = rand() % 100;
 				if (r >= fr) {
 					logThis("child process failed!\n",0);
@@ -65,12 +86,28 @@ int server(int fr){
 			char msg[100];
 			sprintf(msg,"server [%d] req: %s\n", getpid(), entry->d_name);
 			logThis(msg,0);
-			usleep(500000);
+			ret = usleep(500000);
+			if (ret < 0){
+				perror("Error: usleep failed!\n");
+				return ret;
+			}
 			//close and delete request files
-			fclose(requestFile);
-			unlink(filepath);
+			ret = fclose(requestFile);
+			if (ret != 0){
+				perror("Error: could not close file!\n");
+				continue;
+			}
+			ret = unlink(filepath);
+			if (ret != 0){
+				perror("Error: could not unlink!\n");
+				continue;
+			}
 		}
-		closedir(requestdir);
+		ret = closedir(requestdir);
+		if (ret < 0){
+			perror("Error: could not close directory!\n");
+			return ret;
+		}
 	}
 }
 int backup(int MAX_FORKS) {
@@ -117,7 +154,8 @@ int main(int argc, char** argv){
 	printf("A nice welcome message\n");
 	int c, MAX_FORKS;
 	int fr=0; //failratio in percent
-	
+	int ret=0;
+
 	//parse input: n sets maximum number of server spawning attempts
 	//f: fail ratio
 	while ((c = getopt(argc, argv, "n:f:")) != -1){
@@ -125,19 +163,31 @@ int main(int argc, char** argv){
 			case 'n':
 				MAX_FORKS=atoi(optarg);
 				if(MAX_FORKS < 1 || MAX_FORKS >50){
-					fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					ret = fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					if (ret < 0){
+						perror("Error: fprintf could not write\n");
+						return ret;
+					}
 					MAX_FORKS=5;
 				}
 				break;
 			case 'f':
 				fr = atoi(optarg);
 				if (fr < 0 || fr > 100) {
-					fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					ret = fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					if (ret < 0){
+						perror("Error: fprintf could not write\n");
+						return ret;
+					}
 					fr=0;
 				}
 				break;
 			default:
-				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+				ret = fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+				if (ret < 0){
+					perror("Error: fprintf could not write\n");
+					return ret;
+				}
 		}
 	}
 	
@@ -147,7 +197,7 @@ int main(int argc, char** argv){
 	srand(getpid());
 	logThis("start processing\n",0);
 	//start processing requests
-	int ret = server(fr);
+	ret = server(fr);
 	logThis("done processing\n",0);
 	exit(ret);
 
