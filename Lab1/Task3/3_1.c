@@ -77,6 +77,7 @@ int server(int fr, int* fd){
 	// Reserve memory for reading request files
 	char buffer[255];
 	struct dirent* entry;
+	int ret=0;
 	while(1){
 		// Open a directory stream of requests
 		DIR *requestdir	= opendir("./requests");
@@ -102,9 +103,9 @@ int server(int fr, int* fd){
 			
 			// Create artificial crash if specified by -f and filename contains "fail"
 			const char failstr[10] = "fail";
-			char* ret;
-			ret = strstr(entry->d_name,failstr);
-			if(fr > 0 && ret) {
+			char* cret;
+			cret = strstr(entry->d_name,failstr);
+			if(fr > 0 && cret) {
 				int r = rand() % 100;
 				if (r >= fr) {
 					printf("child process failed!\n");
@@ -161,10 +162,7 @@ int backup(int MAX_FORKS, int* fd) {
 		}
 
 		// Ignore the signal
-		if (signal(SIGPIPE, sig_handler) == SIG_ERR){
-			perror("Couldnt receive SIGPIPE");
-			return ret;
-		}
+		
 		signal(SIGPIPE, SIG_IGN);
 
 		printf("creating child...\n");
@@ -219,6 +217,7 @@ int backup(int MAX_FORKS, int* fd) {
 int main(int argc, char** argv){
 	printf("A nice welcome message\n");
 	logThis("The program starts with a very nice welcome!\n", 0);
+	int ret=0;
 
 	int c; // Reserved for reading the program arguments
 	int fd[2]; // Reserved for a pipe, the communication channel between parent and child
@@ -270,7 +269,7 @@ int main(int argc, char** argv){
 	srand(getpid());
 	
 	printf("start processing requests\n");
-	int ret = server(fr, fd);
+	ret = server(fr, fd);
 	
 	printf("done processing\n");
 	exit(ret);

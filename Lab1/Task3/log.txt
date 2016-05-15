@@ -1,0 +1,688 @@
+Starting test run at So 15. Mai 17:17:24 CEST 2016
+The program starts with a very nice welcome!
+---
+The program has the following arguments:
+Max Forks = 10
+Fail Ratio = 50
+---
+The parent process has ID = 3282
+A new child process created with ID = 3284
+server [3284] req: 1
+server [3284] req: fail45
+server [3284] req: 15
+server [3284] req: 20
+A new child process created with ID = 3391
+A new child process created with ID = 3392
+server [3392] req: fail79
+server [3392] req: 55
+server [3392] req: 78
+server [3392] req: 86
+A new child process created with ID = 3394
+server [3394] req: fail51
+server [3394] req: 25
+server [3394] req: 40
+server [3394] req: 10
+server [3394] req: 28
+A new child process created with ID = 3396
+A new child process created with ID = 3397
+A new child process created with ID = 3398
+A new child process created with ID = 3399
+server [3399] req: fail87
+A new child process created with ID = 3400
+A new child process created with ID = 3401
+server [3401] req: fail70
+server [3401] req: 66
+server [3401] req: 81
+server [3401] req: 67
+server [3401] req: 35
+server [3401] req: 99
+server [3401] req: 13
+server [3401] req: 6
+server [3401] req: 63
+server [3401] req: 50
+server [3401] req: 89
+server [3401] req: 75
+server [3401] req: 23
+A new child process created with ID = 3405
+server [3405] req: fail90
+A new child process created with ID = 3406
+server [3406] req: fail36
+server [3406] req: 54
+A new child process created with ID = 3407
+A new child process created with ID = 3409
+A new child process created with ID = 3410
+A new child process created with ID = 3411
+server [3411] req: fail53
+server [3411] req: 34
+A new child process created with ID = 3412
+A new child process created with ID = 3413
+server [3413] req: fail44
+server [3413] req: fail14
+server [3413] req: 100
+server [3413] req: 95
+server [3413] req: 98
+server [3413] req: 93
+A new child process created with ID = 3415
+A new child process created with ID = 3416
+server [3416] req: fail27
+server [3416] req: 64
+A new child process created with ID = 3417
+server [3417] req: fail58
+server [3417] req: 73
+server [3417] req: 42
+server [3417] req: fail83
+server [3417] req: 92
+server [3417] req: 52
+server [3417] req: 97
+server [3417] req: 88
+server [3417] req: 32
+server [3417] req: 21
+server [3417] req: fail59
+A new child process created with ID = 3420
+A new child process created with ID = 3421
+A new child process created with ID = 3422
+server [3422] req: fail69
+server [3422] req: 41
+A new child process created with ID = 3423
+A new child process created with ID = 3424
+server [3424] req: fail74
+server [3424] req: fail94
+server [3424] req: 49
+server [3424] req: 12
+server [3424] req: 43
+server [3424] req: 85
+server [3424] req: 33
+A new child process created with ID = 3426
+A new child process created with ID = 3428
+A new child process created with ID = 3429
+server [3429] req: fail7
+A new child process created with ID = 3430
+A new child process created with ID = 3431
+server [3431] req: fail72
+server [3431] req: fail84
+server [3431] req: fail19
+server [3431] req: 11
+server [3431] req: 39
+server [3431] req: 47
+server [3431] req: 24
+server [3431] req: 22
+server [3431] req: 71
+server [3431] req: 29
+server [3431] req: fail56
+server [3431] req: 38
+server [3431] req: 18
+server [3431] req: fail26
+server [3431] req: 3
+server [3431] req: 46
+server [3431] req: 5
+server [3431] req: 80
+server [3431] req: 68
+server [3431] req: 30
+server [3431] req: 57
+A new child process created with ID = 3435
+server [3435] req: fail8
+server [3435] req: 4
+server [3435] req: 48
+server [3435] req: fail76
+server [3435] req: fail16
+server [3435] req: 62
+server [3435] req: fail91
+server [3435] req: 65
+server [3435] req: 9
+server [3435] req: fail17
+A new child process created with ID = 3438
+server [3438] req: fail61
+server [3438] req: fail2
+server [3438] req: 31
+server [3438] req: 82
+server [3438] req: 37
+server [3438] req: 60
+A new child process created with ID = 3440
+server [3440] req: fail77
+A new child process created with ID = 3441
+A new child process created with ID = 3442
+A new child process created with ID = 3443
+server [3443] req: fail96
+Starting test run at So 15. Mai 17:26:30 CEST 2016
+The program starts with a very nice welcome!
+---
+The program has the following arguments:
+Max Forks = 10
+Fail Ratio = 50
+---
+The parent process has ID = 3026
+A new child process created with ID = 3028
+A new child process created with ID = 3030
+A new child process created with ID = 3032
+server [3032] req: 1
+server [3032] req: 91
+server [3032] req: fail65
+server [3032] req: 15
+server [3032] req: 20
+server [3032] req: fail21
+server [3032] req: fail79
+A new child process created with ID = 3138
+A new child process created with ID = 3139
+server [3139] req: 86
+server [3139] req: fail51
+A new child process created with ID = 3140
+A new child process created with ID = 3141
+A new child process created with ID = 3142
+server [3142] req: fail64
+server [3142] req: 25
+A new child process created with ID = 3143
+A new child process created with ID = 3144
+A new child process created with ID = 3145
+A new child process created with ID = 3146
+A new child process created with ID = 3147
+A new child process created with ID = 3148
+A new child process created with ID = 3149
+server [3149] req: 40
+A new child process created with ID = 3150
+A new child process created with ID = 3152
+A new child process created with ID = 3153
+server [3153] req: fail100
+server [3153] req: fail23
+A new child process created with ID = 3154
+A new child process created with ID = 3155
+A new child process created with ID = 3156
+A new child process created with ID = 3157
+server [3157] req: fail97
+A new child process created with ID = 3158
+A new child process created with ID = 3159
+server [3159] req: fail67
+server [3159] req: fail55
+A new child process created with ID = 3160
+A new child process created with ID = 3161
+A new child process created with ID = 3162
+server [3162] req: 58
+A new child process created with ID = 3163
+server [3163] req: 87
+A new child process created with ID = 3165
+server [3165] req: fail13
+A new child process created with ID = 3166
+A new child process created with ID = 3167
+A new child process created with ID = 3168
+A new child process created with ID = 3169
+server [3169] req: 66
+server [3169] req: 81
+A new child process created with ID = 3170
+A new child process created with ID = 3171
+A new child process created with ID = 3172
+server [3172] req: fail34
+A new child process created with ID = 3173
+A new child process created with ID = 3174
+A new child process created with ID = 3175
+A new child process created with ID = 3176
+server [3176] req: 35
+A new child process created with ID = 3177
+A new child process created with ID = 3179
+A new child process created with ID = 3180
+server [3180] req: 99
+server [3180] req: fail78
+A new child process created with ID = 3181
+server [3181] req: 8
+server [3181] req: fail10
+server [3181] req: fail29
+A new child process created with ID = 3182
+A new child process created with ID = 3183
+A new child process created with ID = 3184
+A new child process created with ID = 3185
+server [3185] req: 6
+server [3185] req: 50
+server [3185] req: fail48
+A new child process created with ID = 3187
+A new child process created with ID = 3188
+A new child process created with ID = 3189
+server [3189] req: 59
+A new child process created with ID = 3190
+server [3190] req: 89
+A new child process created with ID = 3191
+server [3191] req: 45
+A new child process created with ID = 3192
+server [3192] req: 19
+A new child process created with ID = 3193
+A new child process created with ID = 3195
+server [3195] req: fail98
+A new child process created with ID = 3196
+A new child process created with ID = 3197
+A new child process created with ID = 3198
+A new child process created with ID = 3199
+A new child process created with ID = 3200
+server [3200] req: fail5
+A new child process created with ID = 3201
+server [3201] req: 90
+server [3201] req: 54
+A new child process created with ID = 3202
+server [3202] req: fail53
+server [3202] req: fail44
+Child detects the termination of its parent and will take the role as a backup process!
+---
+The state of its parent was:
+Max Forks = 10
+Fail Ratio = 50
+---
+-----------------------------RESTARTING-----------------------------
+The program starts with a very nice welcome!
+---
+The program has the following arguments:
+Max Forks = 10
+Fail Ratio = 50
+---
+The parent process has ID = 3202
+A new child process created with ID = 3204
+server [3204] req: fail14
+A new child process created with ID = 3205
+A new child process created with ID = 3206
+server [3206] req: 95
+server [3206] req: 72
+server [3206] req: fail27
+A new child process created with ID = 3207
+server [3207] req: 73
+server [3207] req: 42
+A new child process created with ID = 3209
+server [3209] req: 92
+A new child process created with ID = 3210
+A new child process created with ID = 3211
+server [3211] req: fail49
+A new child process created with ID = 3212
+A new child process created with ID = 3213
+A new child process created with ID = 3214
+server [3214] req: 52
+server [3214] req: 32
+server [3214] req: fail69
+A new child process created with ID = 3215
+server [3215] req: 41
+server [3215] req: fail94
+server [3215] req: fail11
+server [3215] req: 77
+server [3215] req: 12
+A new child process created with ID = 3216
+A new child process created with ID = 3217
+server [3217] req: 43
+server [3217] req: fail80
+A new child process created with ID = 3219
+server [3219] req: 85
+A new child process created with ID = 3220
+A new child process created with ID = 3221
+A new child process created with ID = 3222
+A new child process created with ID = 3223
+A new child process created with ID = 3224
+server [3224] req: 33
+server [3224] req: fail7
+server [3224] req: fail93
+A new child process created with ID = 3225
+server [3225] req: 2
+A new child process created with ID = 3226
+server [3226] req: 39
+server [3226] req: 47
+A new child process created with ID = 3228
+server [3228] req: fail88
+A new child process created with ID = 3229
+server [3229] req: 24
+A new child process created with ID = 3230
+A new child process created with ID = 3231
+A new child process created with ID = 3232
+A new child process created with ID = 3233
+server [3233] req: 22
+server [3233] req: 71
+A new child process created with ID = 3234
+server [3234] req: 61
+server [3234] req: fail56
+server [3234] req: 16
+server [3234] req: 83
+A new child process created with ID = 3236
+server [3236] req: 38
+server [3236] req: 18
+server [3236] req: fail26
+A new child process created with ID = 3238
+A new child process created with ID = 3239
+server [3239] req: 3
+server [3239] req: 46
+A new child process created with ID = 3240
+server [3240] req: 68
+server [3240] req: 30
+A new child process created with ID = 3241
+A new child process created with ID = 3242
+A new child process created with ID = 3243
+server [3243] req: 36
+server [3243] req: 57
+A new child process created with ID = 3245
+server [3245] req: 4
+server [3245] req: 84
+server [3245] req: fail76
+A new child process created with ID = 3246
+server [3246] req: 62
+A new child process created with ID = 3247
+A new child process created with ID = 3248
+server [3248] req: fail75
+A new child process created with ID = 3249
+A new child process created with ID = 3251
+A new child process created with ID = 3252
+A new child process created with ID = 3253
+server [3253] req: fail63
+A new child process created with ID = 3254
+server [3254] req: fail28
+server [3254] req: 74
+A new child process created with ID = 3255
+A new child process created with ID = 3256
+server [3256] req: 9
+server [3256] req: 70
+A new child process created with ID = 3257
+server [3257] req: 31
+server [3257] req: 82
+server [3257] req: 17
+A new child process created with ID = 3259
+A new child process created with ID = 3260
+A new child process created with ID = 3261
+server [3261] req: 60
+server [3261] req: fail37
+A new child process created with ID = 3262
+A new child process created with ID = 3263
+A new child process created with ID = 3264
+A new child process created with ID = 3265
+A new child process created with ID = 3266
+server [3266] req: fail96
+Starting test run at So 15. Mai 17:29:52 CEST 2016
+The program starts with a very nice welcome!
+---
+The program has the following arguments:
+Max Forks = 10
+Fail Ratio = 50
+---
+The parent process has ID = 3341
+A new child process created with ID = 3343
+server [3343] req: 1
+A new child process created with ID = 3345
+server [3345] req: 1
+server [3343] req: 91
+server [3345] req: 91
+server [3343] req: 20
+server [3345] req: 20
+A new child process created with ID = 3452
+server [3452] req: fail21
+A new child process created with ID = 3453
+server [3453] req: fail21
+server [3452] req: 55
+server [3453] req: 55
+server [3452] req: 86
+server [3453] req: 86
+A new child process created with ID = 3455
+server [3455] req: fail64
+A new child process created with ID = 3456
+A new child process created with ID = 3457
+A new child process created with ID = 3458
+A new child process created with ID = 3459
+server [3459] req: fail64
+server [3455] req: 40
+A new child process created with ID = 3460
+server [3460] req: 40
+server [3455] req: 28
+server [3460] req: 28
+A new child process created with ID = 3467
+server [3467] req: fail100
+server [3460] req: fail100
+server [3467] req: 53
+A new child process created with ID = 3468
+A new child process created with ID = 3469
+A new child process created with ID = 3470
+A new child process created with ID = 3471
+server [3471] req: 53
+server [3467] req: fail23
+server [3471] req: fail23
+server [3467] req: 14
+server [3471] req: 14
+A new child process created with ID = 3473
+A new child process created with ID = 3474
+server [3474] req: fail60
+A new child process created with ID = 3475
+A new child process created with ID = 3476
+server [3476] req: fail60
+server [3474] req: 58
+A new child process created with ID = 3477
+A new child process created with ID = 3478
+server [3478] req: 58
+server [3474] req: 69
+server [3478] req: 69
+server [3474] req: 87
+server [3478] req: 87
+server [3474] req: 66
+server [3478] req: 66
+server [3474] req: 81
+server [3478] req: 81
+server [3474] req: fail15
+server [3478] req: fail15
+server [3474] req: 67
+server [3478] req: 67
+server [3474] req: 35
+server [3478] req: 35
+server [3474] req: 13
+A new child process created with ID = 3479
+A new child process created with ID = 3480
+A new child process created with ID = 3481
+A new child process created with ID = 3482
+server [3482] req: 13
+server [3474] req: fail99
+server [3482] req: fail99
+A new child process created with ID = 3483
+A new child process created with ID = 3484
+A new child process created with ID = 3485
+server [3485] req: fail78
+A new child process created with ID = 3486
+A new child process created with ID = 3487
+A new child process created with ID = 3488
+server [3488] req: fail78
+server [3485] req: 8
+server [3488] req: 8
+server [3485] req: 26
+server [3488] req: 26
+server [3485] req: fail10
+server [3488] req: fail10
+server [3485] req: 6
+A new child process created with ID = 3489
+A new child process created with ID = 3490
+server [3490] req: 6
+server [3485] req: 63
+server [3490] req: 63
+server [3485] req: 76
+A new child process created with ID = 3491
+server [3491] req: 76
+A new child process created with ID = 3492
+A new child process created with ID = 3493
+A new child process created with ID = 3494
+server [3494] req: fail25
+server [3491] req: fail25
+server [3494] req: 50
+A new child process created with ID = 3495
+A new child process created with ID = 3496
+server [3496] req: 50
+server [3494] req: 79
+server [3496] req: 79
+server [3494] req: 89
+server [3496] req: 89
+server [3494] req: 45
+A new child process created with ID = 3497
+A new child process created with ID = 3498
+A new child process created with ID = 3499
+server [3499] req: 45
+server [3494] req: fail82
+server [3499] req: fail82
+server [3494] req: 75
+server [3499] req: 75
+A new child process created with ID = 3500
+A new child process created with ID = 3501
+server [3501] req: fail33
+A new child process created with ID = 3502
+server [3502] req: fail33
+server [3501] req: fail5
+A new child process created with ID = 3503
+A new child process created with ID = 3504
+server [3504] req: fail5
+server [3501] req: 90
+A new child process created with ID = 3505
+A new child process created with ID = 3506
+A new child process created with ID = 3507
+A new child process created with ID = 3508
+A new child process created with ID = 3509
+server [3509] req: 90
+server [3501] req: 34
+server [3509] req: 34
+server [3501] req: 98
+A new child process created with ID = 3510
+A new child process created with ID = 3511
+server [3511] req: 98
+server [3501] req: 72
+A new child process created with ID = 3512
+A new child process created with ID = 3513
+A new child process created with ID = 3514
+server [3514] req: 72
+server [3501] req: fail12
+A new child process created with ID = 3515
+server [3515] req: fail12
+A new child process created with ID = 3516
+A new child process created with ID = 3517
+A new child process created with ID = 3518
+server [3518] req: fail27
+A new child process created with ID = 3519
+server [3519] req: fail27
+server [3518] req: 73
+server [3519] req: 73
+server [3518] req: 42
+server [3519] req: 42
+A new child process created with ID = 3520
+server [3520] req: fail83
+A new child process created with ID = 3521
+server [3521] req: fail83
+server [3520] req: 92
+A new child process created with ID = 3522
+server [3522] req: 92
+A new child process created with ID = 3523
+server [3523] req: fail49
+server [3522] req: fail49
+server [3523] req: 52
+server [3522] req: 52
+server [3523] req: 97
+server [3522] req: 97
+server [3523] req: 88
+A new child process created with ID = 3524
+server [3524] req: 88
+server [3523] req: 32
+A new child process created with ID = 3525
+A new child process created with ID = 3526
+A new child process created with ID = 3527
+server [3527] req: 32
+server [3523] req: 94
+A new child process created with ID = 3528
+A new child process created with ID = 3529
+server [3529] req: 94
+A new child process created with ID = 3530
+A new child process created with ID = 3531
+A new child process created with ID = 3532
+server [3532] req: fail59
+A new child process created with ID = 3533
+A new child process created with ID = 3534
+A new child process created with ID = 3535
+server [3535] req: fail59
+Child detects the termination of its parent and will take the role as a backup process!
+---
+The state of its parent was:
+Max Forks = 10
+Fail Ratio = 50
+---
+-----------------------------RESTARTING-----------------------------
+The program starts with a very nice welcome!
+---
+The program has the following arguments:
+Max Forks = 10
+Fail Ratio = 50
+---
+The parent process has ID = 3532
+A new child process created with ID = 3536
+server [3536] req: 41
+server [3535] req: 41
+server [3536] req: fail74
+server [3535] req: fail74
+server [3536] req: 77
+server [3535] req: 77
+server [3536] req: 43
+server [3535] req: 43
+server [3536] req: 7
+A new child process created with ID = 3537
+server [3537] req: 7
+server [3536] req: 85
+server [3537] req: 85
+A new child process created with ID = 3538
+A new child process created with ID = 3539
+A new child process created with ID = 3540
+server [3540] req: fail93
+A new child process created with ID = 3541
+A new child process created with ID = 3542
+A new child process created with ID = 3543
+A new child process created with ID = 3544
+server [3544] req: fail93
+A new child process created with ID = 3545
+A new child process created with ID = 3546
+server [3546] req: fail84
+A new child process created with ID = 3547
+server [3547] req: fail84
+server [3546] req: 2
+A new child process created with ID = 3548
+A new child process created with ID = 3549
+server [3549] req: 2
+A new child process created with ID = 3550
+A new child process created with ID = 3551
+A new child process created with ID = 3552
+server [3552] req: fail19
+server [3549] req: fail19
+server [3552] req: 11
+A new child process created with ID = 3553
+A new child process created with ID = 3554
+A new child process created with ID = 3555
+A new child process created with ID = 3556
+server [3556] req: 11
+server [3552] req: 39
+A new child process created with ID = 3557
+A new child process created with ID = 3558
+A new child process created with ID = 3559
+server [3559] req: 39
+server [3552] req: 47
+A new child process created with ID = 3560
+A new child process created with ID = 3561
+A new child process created with ID = 3562
+A new child process created with ID = 3563
+server [3563] req: 47
+server [3552] req: 24
+server [3563] req: 24
+server [3552] req: 22
+A new child process created with ID = 3565
+A new child process created with ID = 3566
+server [3566] req: 22
+server [3552] req: 71
+A new child process created with ID = 3567
+server [3567] req: 71
+server [3552] req: 29
+A new child process created with ID = 3568
+server [3568] req: 29
+server [3552] req: 61
+server [3568] req: 61
+server [3552] req: 16
+server [3568] req: 16
+server [3552] req: 38
+server [3568] req: 38
+server [3552] req: 18
+server [3568] req: 18
+server [3552] req: fail95
+A new child process created with ID = 3613
+server [3613] req: fail95
+server [3552] req: 3
+server [3613] req: 3
+server [3552] req: 46
+server [3613] req: 46
+server [3552] req: 80
+A new child process created with ID = 3614
+server [3614] req: 80
+server [3552] req: fail54
+server [3614] req: fail54
+server [3552] req: 68
+server [3614] req: 68
+server [3552] req: 30
