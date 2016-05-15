@@ -13,6 +13,8 @@ int MAX_FORKS;
 int fr=0; //failratio in percent
 
 void logThis(char* text, int arg){
+	int ret=0;
+
 	// Get the log file or create a new one	
 	FILE *logFile = fopen("log.txt", "a");
 	
@@ -24,13 +26,23 @@ void logThis(char* text, int arg){
 
 	// The string to be printed 
 	char logText[100]; 
-	sprintf(logText, text, arg);
-	
+	ret = sprintf(logText, text, arg);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
 	// Print the string in the log file
-	fprintf(logFile, logText);
-	
+	ret = fprintf(logFile, "%s", logText);
+	if (ret < 0){
+		perror("Error: fprintf could not write\n");
+		return;
+	}
 	// Close the log file
-	fclose(logFile);
+	ret = fclose(logFile);
+	if (ret < 0){
+		perror("Error: could not close file\n");
+		return;
+	}
 }
 
 void backup_terminated(int* fd){
@@ -57,7 +69,7 @@ void backup_terminated(int* fd){
 			execl("run", "run", arg1, arg2, (char*)0);
       		perror("execl() failure!\n");
 		} else
-			perror("Could not write even that the parent was not terminated!");
+			perror("Could not write even through the parent was not terminated!");
 	}
 }
 
@@ -83,6 +95,10 @@ int server(int fr, int* fd){
 			strcpy(filepath, "requests/");
 			strncat(filepath, entry->d_name, 22);
 			FILE* requestFile = fopen(filepath, "r");
+			if (requestFile == NULL){
+				perror("Error: could not open file!\n");
+				continue;
+			}
 			
 			// Create artificial crash if specified by -f and filename contains "fail"
 			const char failstr[10] = "fail";
@@ -96,15 +112,27 @@ int server(int fr, int* fd){
 				}
 			}
 			
-			// Only read in first line (max 255 chars), since this is only pseudo code
+			//only read in first line (max 255 chars), since this is only pseudo code
 			char* request = fgets(buffer, 255, requestFile);
-
-			printf("server [%d] req: %s\n", getpid(), entry->d_name);
-			usleep(500000);
-
-			// Close the file and delete it
-			fclose(requestFile);
-			unlink(filepath);
+			char msg[100];
+			sprintf(msg,"server [%d] req: %s\n", getpid(), entry->d_name);
+			logThis(msg,0);
+			ret = usleep(500000);
+			if (ret < 0){
+				perror("Error: usleep failed!\n");
+				return ret;
+			}
+			//close and delete request files
+			ret = fclose(requestFile);
+			if (ret != 0){
+				perror("Error: could not close file!\n");
+				continue;
+			}
+			ret = unlink(filepath);
+			if (ret != 0){
+				perror("Error: could not unlink!\n");
+				continue;
+			}
 
 			// Check if the parent process was terminated, otherweise continue
 			backup_terminated(fd);
@@ -126,9 +154,17 @@ int backup(int MAX_FORKS, int* fd) {
 		num_forks+=1;
 		
 		// Create a pipe to be used as a channel between parent and its child
-		pipe(fd);
+		int ret = pipe(fd);
+		if(ret == -1){
+			perror("error when creating a pipe");
+			return ret;
+		}
 
 		// Ignore the signal
+		if (signal(SIGPIPE, sig_handler) == SIG_ERR){
+			perror("Couldnt receive SIGPIPE");
+			return ret;
+		}
 		signal(SIGPIPE, SIG_IGN);
 
 		printf("creating child...\n");
@@ -187,25 +223,36 @@ int main(int argc, char** argv){
 	int c; // Reserved for reading the program arguments
 	int fd[2]; // Reserved for a pipe, the communication channel between parent and child
 	
-	// Parse inputs
 	while ((c = getopt(argc, argv, "n:f:")) != -1){
 		switch(c){
 			case 'n':
 				MAX_FORKS=atoi(optarg);
 				if(MAX_FORKS < 1 || MAX_FORKS >50){
-					fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					ret = fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
+					if (ret < 0){
+						perror("Error: fprintf could not write\n");
+						return ret;
+					}
 					MAX_FORKS=5;
 				}
 				break;
 			case 'f':
 				fr = atoi(optarg);
 				if (fr < 0 || fr > 100) {
-					fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					ret = fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
+					if (ret < 0){
+						perror("Error: fprintf could not write\n");
+						return ret;
+					}
 					fr=0;
 				}
 				break;
 			default:
-				fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+				ret = fprintf(stderr, "Unknown or syntactically erroneous parameter\n");
+				if (ret < 0){
+					perror("Error: fprintf could not write\n");
+					return ret;
+				}
 		}
 	}
 
