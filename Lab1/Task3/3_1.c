@@ -172,10 +172,10 @@ int backup(int MAX_FORKS, int* fd) {
 
 		// Ignore the signal and check if signal doesn't fail
 		signal(SIGPIPE, SIG_IGN);
-		//if(errno == EINVAL){
-			//perror("Error: signal() fails; signum is invalid");
-			//return -1;
-		//}
+		if(errno == EINVAL){
+			perror("Error: signal() fails; signum is invalid");
+			return -1;
+		}
 
 		printf("creating child...\n");
 		pid = fork();
@@ -188,10 +188,9 @@ int backup(int MAX_FORKS, int* fd) {
 		// Child process (primary)
 		if(pid == 0) {
 			// The child closes the write end of the pipe
-			//if(
-			close(fd[0]);//){
-				//perror("Error: close() raises an error while closing write end of the pipe!");
-			//}
+			if(close(fd[0])){
+				perror("Error: close() raises an error while closing write end of the pipe!");
+			}
 
 			printf("I am the child process with pid %i\n", getpid());
 			logThis("A new child process created with ID = %i\n", getpid());
@@ -215,10 +214,9 @@ int backup(int MAX_FORKS, int* fd) {
 		}
 		
 		// The parent closes the read end of the pipe, check if any error raises
-		//if(
-		close(fd[1]);//){
-			//perror("Error: close() raises an error while closing the read end of the pipe!");
-			//}
+		if(close(fd[1])){
+			perror("Error: close() raises an error while closing the read end of the pipe!");
+		}
 
 		// Wait for crash of primary
 		printf("waiting %i\n", pid);
