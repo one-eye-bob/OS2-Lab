@@ -71,8 +71,7 @@ int server(int fr, int* fd){
 		
 		// Loop on each file in this directory
 		while((entry = readdir(requestdir)) != NULL){
-			// Check if the parent process was terminated, otherweise continue
-			backup_terminated(fd);
+			
 			
 			// Check if this file has only a regular type
 			if (entry->d_type != DT_REG){
@@ -106,6 +105,9 @@ int server(int fr, int* fd){
 			// Close the file and delete it
 			fclose(requestFile);
 			unlink(filepath);
+
+			// Check if the parent process was terminated, otherweise continue
+			backup_terminated(fd);
 		}
 		closedir(requestdir);
 	}
