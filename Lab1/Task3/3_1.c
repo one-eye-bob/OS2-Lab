@@ -20,7 +20,7 @@ void logThis(char* text, int arg){
 	
 	// Check of the file could be opened
 	if (logFile == NULL){
-		perror("fopen failed to open log.txt file!\n");
+		perror("Error: fopen failed to open log.txt file!\n");
 		return;
 	}
 
@@ -48,12 +48,22 @@ void logThis(char* text, int arg){
 void backup_terminated(int* fd){
 	// Prepare the arguments in case the parent was terminated
 	char arg1[10], arg2[10];
-	sprintf (arg1 , "%s%d" , "-n " , MAX_FORKS);
-	sprintf (arg2 , "%s%d" , "-f " , fr);
+	int ret;
+	ret = sprintf(arg1, "%s%d", "-n ", MAX_FORKS);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
+	ret = sprintf(arg2, "%s%d", "-f ", fr);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
 	
 	// Try to write in the pipe
 	char c[] = "test";
-	int ret = write(fd[1], c, strlen(c)+1);
+
+	ret = write(fd[1], c, strlen(c)+1);
 
 	// Check if it was not possible to write there
 	if(ret == -1){
@@ -67,9 +77,9 @@ void backup_terminated(int* fd){
 			logThis("---\n", 0);
 			logThis("-----------------------------RESTARTING-----------------------------\n", 0);
 			execl("run", "run", arg1, arg2, (char*)0);
-      		perror("execl() failure!\n");
+      		perror("Error: execl() failure!\n");
 		} else
-			perror("Could not write even through the parent was not terminated!");
+			perror("Error: Could not write even that the parent was not terminated!");
 	}
 }
 
@@ -84,7 +94,8 @@ int server(int fr, int* fd){
 		
 		// Loop on each file in this directory
 		while((entry = readdir(requestdir)) != NULL){
-			
+			// Check if the parent process was terminated, otherweise continue
+			backup_terminated(fd);
 			
 			// Check if this file has only a regular type
 			if (entry->d_type != DT_REG){
@@ -113,7 +124,7 @@ int server(int fr, int* fd){
 				}
 			}
 			
-			//only read in first line (max 255 chars), since this is only pseudo code
+			// Only read in first line (max 255 chars), since this is only pseudo code
 			char* request = fgets(buffer, 255, requestFile);
 			char msg[100];
 			sprintf(msg,"server [%d] req: %s\n", getpid(), entry->d_name);
@@ -134,11 +145,8 @@ int server(int fr, int* fd){
 				perror("Error: could not unlink!\n");
 				continue;
 			}
-
-			// Check if the parent process was terminated, otherweise continue
-			backup_terminated(fd);
 		}
-		closedir(requestdir);
+		closedir(requestdir);;
 	}
 }
 
@@ -156,27 +164,34 @@ int backup(int MAX_FORKS, int* fd) {
 		
 		// Create a pipe to be used as a channel between parent and its child
 		int ret = pipe(fd);
+		// Check if error raise
 		if(ret == -1){
-			perror("error when creating a pipe");
+			perror("Error: error when creating a pipe");
 			return ret;
 		}
 
-		// Ignore the signal
-		
+		// Ignore the signal and check if signal doesn't fail
 		signal(SIGPIPE, SIG_IGN);
+		//if(errno == EINVAL){
+			//perror("Error: signal() fails; signum is invalid");
+			//return -1;
+		//}
 
 		printf("creating child...\n");
 		pid = fork();
 
 		// Handle fork error
 		if(pid < 0) {
-			perror("error when creating a child");
+			perror("Error: error when creating a child");
 		}
 
 		// Child process (primary)
 		if(pid == 0) {
 			// The child closes the write end of the pipe
-			close(fd[0]);
+			//if(
+			close(fd[0]);//){
+				//perror("Error: close() raises an error while closing write end of the pipe!");
+			//}
 
 			printf("I am the child process with pid %i\n", getpid());
 			logThis("A new child process created with ID = %i\n", getpid());
@@ -199,14 +214,17 @@ int backup(int MAX_FORKS, int* fd) {
 			printParentID = 0;
 		}
 		
-		// The parent closes the read end of the pipe
-		close(fd[1]);
+		// The parent closes the read end of the pipe, check if any error raises
+		//if(
+		close(fd[1]);//){
+			//perror("Error: close() raises an error while closing the read end of the pipe!");
+			//}
 
 		// Wait for crash of primary
 		printf("waiting %i\n", pid);
 		pid = waitpid((pid_t)pid, &status, 0);
 		if(pid < 0){
-			perror("Error while trying to wait for child");
+			perror("Error: while trying to wait for child");
 		}
 
 		printf("done waiting%i\n", pid);
@@ -222,6 +240,7 @@ int main(int argc, char** argv){
 	int c; // Reserved for reading the program arguments
 	int fd[2]; // Reserved for a pipe, the communication channel between parent and child
 	
+	// Parse inputs
 	while ((c = getopt(argc, argv, "n:f:")) != -1){
 		switch(c){
 			case 'n':
