@@ -1,0 +1,3 @@
+Problems:
+The application is not fail tolerant against failure of the parent process. If the parent/backup process crashes, the whole application crashes.
+The service survives failures of the child process, since it will just be restarted.
