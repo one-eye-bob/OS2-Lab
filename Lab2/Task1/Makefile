@@ -1,16 +1,17 @@
 CC=gcc
 CFLAGS=-Wall -Wextra
 LIBS=-lcriu
- 
+
 EXEC=run
 
+TASK=1
 
-prog: 1.o
+prog: $(TASK).o
 	sudo criu service -d
-	$(CC) $(CFLAGS) -o $(EXEC) 1.o $(LIBS)
+	$(CC) $(CFLAGS) -o $(EXEC) $(TASK).o $(LIBS)
 
-1.o: 1.c
-	$(CC) -c 1.c
+$(TASK).o: $(TASK).c
+	$(CC) -c $(TASK).c
 
 
 exec: prog

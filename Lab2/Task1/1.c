@@ -1,8 +1,8 @@
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <criu/criu.h>
-#include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 int main(){
 	//Reserved for the file descriptor
