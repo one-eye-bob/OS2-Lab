@@ -24,5 +24,5 @@ test: prog
 .PHONY: clean
 
 clean:
-	-rm *.o $(EXEC) *.socket
-	-rm -rf dump/
+	# Delete everything except c files and Makefile
+	sudo find . ! -name *.c ! -name Makefile -delete
