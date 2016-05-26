@@ -40,7 +40,7 @@ int main(){
 	//Specify how to connnect to service socket
 	criu_set_service_comm(CRIU_COMM_SK);
 	
-	//Make checkpoints
+	//To test whether the kernel support is up-to-dater
 	ret = criu_check();
 	if(ret < 0){
 		perror("Error: criu_check failed.\n");
