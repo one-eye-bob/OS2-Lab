@@ -7,11 +7,18 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 
 //Reserved for the output file name
 char* outputFN;
+
+//Reserved for the checkpoint interval (in seconds)
+int cpInterval;
+
+//Reserved for the time of the last checkpoint
+time_t last_time;
 
 	
 int writeOnOPFile(char* outputText){
@@ -49,82 +56,181 @@ int writeOnOPFile(char* outputText){
 	return 0;
 }
 
+int is_number(char* string){
+	//TODO
+
+	//It is a number
+	return 1;
+}
+
+int isAllowedToCheckpoint() {
+	//Reserved for the current time
+	time_t current_time;
+
+	//Reserved to calculate the differnce in seconds
+	int difference;
+
+	//Check if the last time was NOT set
+	if(last_time == 0){
+		//Take the first checkpoint
+		return 1;
+	}
+
+	//Get the current time
+	current_time = time(0);
+
+	//Calculate the difference between these times (in seconds)
+	difference = current_time - last_time;
+	
+	//Is the last checkpoint time old
+	if(difference >= cpInterval){
+		//Free to take a new checkpoint
+		return 1;
+	}
+
+	//It is too soon
+	return 0;
+}
+
+int makeACheckpoint(){
+	//TODO: I need to test this function
+	//Reserved to check for funtions's errors
+	int ret;
+	
+	//Check if criu need to be initalized
+	if(last_time == 0){
+		//Reserved for the file descriptor
+		int fd;
+	
+		//Create the "checkpoints" directory if it doesn't exist, only owner has (full) access
+		mkdir("checkpoints", 7777); //0700
+	
+		//Open if "checkpoints" is a directory, or fail
+		fd = open("checkpoints", O_DIRECTORY);
+	
+		//Check if open didn't fail
+		if(fd == -1){
+			perror("Error: open failed to open the 'checkpoints' directory.\n");
+			return -1;	
+		}
+
+		//Set up criu options
+		ret = criu_init_opts();
+		if(ret == -1){
+			perror("Error: criu_init_opts failed to inital the request options.\n");
+		}
+	
+		//Set the images directory, where they will be stored
+		criu_set_images_dir_fd(fd);
+	
+		//Specify the CRIU service socket
+		criu_set_service_address("criu_service.socket");
+	
+		//Specify how to connnect to service socket
+		criu_set_service_comm(CRIU_COMM_SK);
+	}
+	
+	//Make a checkpoint
+	ret = criu_dump();
+	if(ret < 0){
+		//TODO: I always get 'ret' = -52
+		perror("Error: criu_dump failed!");
+	}
+	
+	//Set last_time to this time
+	last_time = time(0);
+}
+
 int working(){
-	//Defining the max number of characters as input
-	int MAX_SIZE = 11;
+	//Reserved for the whole generated numbers as a string
+	char* allGeneratedNumbers = "";
+
+	//Defining the max number of character to be store in allGeneratedNumbers
+	int MAX_SIZE = 100;
+
+	//Defining the max number of characters as input (integer with '-')
+	int MAX_INPUT = 11;
 
 	//Reserved for the first input, which should be integer
-	char input[MAX_SIZE];
+	char input[MAX_INPUT];
 
-	//To save the whole generated numbers as a string
-	char* generatedNumbers = "";
+	//Loop forever until and exit in some conditions
+	while(1){
+		//Tell the user to enter to type
+		printf("$");
 
-	//Tell the user to enter to type
-	printf("$");
+		//Read the first input and check if no errors
+		if(fgets(input, MAX_INPUT, stdin) != NULL){
+			//Check if a checkpoint should be taken
+			if(isAllowedToCheckpoint()){
+				//Make a checkpoint
+				makeACheckpoint();
+			}
 
-	//Read the first input and check if no errors
-	if(fgets(input, MAX_SIZE, stdin) != NULL){
-		//TODO: check if input is number, like: isnumber(input)
-		if(1){
-			//Convert the input to integer
-			int n = atoi(input);
+			//Check if input is number
+			if(is_number(input)){
+				//To save the following generated numbers as a string
+				char* genNums = "#";
 
-			//Check in input number
-			if(n < 0)
-				//Exit with returning the value n
-				return n;
-			else if(n == 0){
-				//Nothing to be done here
-			} else {
-				//Initial the range to get different seeds
-				srand(getpid());
+				//Convert the input to integer
+				int n = atoi(input);
 
-				//The expected summation for all natural number smaller than n
-				int endSum = n*(n-1)/2;
+				//Check in input number
+				if(n < 0)
+					//Exit with returning the value n
+					return n;
+				else {
+					//Initial the range to get different seeds
+					srand(getpid());
 
-				//Initial the current summation
-				int curSum = 0;
-				while(curSum < endSum){
-					//Get a random number smaller than n
-					int r = rand() % n;
+					//The expected summation for all natural number smaller than n
+					int endSum = n*(n-1)/2;
 
-					//Add only bigger than 0 
-					if(r == 0)
-						continue;
+					//Initial the current summation
+					int curSum = 0;
+					while(curSum < endSum){
+						//Get a random number smaller than n
+						int r = rand() % n;
+
+						//Add only bigger than 0 
+						if(r == 0)
+							continue;
 				
-					//Concatenate the integer r with the return char
-					char newNum[11];
-					sprintf(newNum, "%d\n", r);
+						//Concatenate the integer r with the return char
+						char newNum[MAX_INPUT+1];
+						sprintf(newNum, "#%d#", r);
 
-					//Check if this number already been added
-					if(strstr(generatedNumbers, newNum) != NULL){
-						//Ignore this old number
-					} else {
-						//Add this new number to the generated numbers string
-						char tempStr[100];
-						sprintf(tempStr, "%s%d\n", generatedNumbers, r);
-						generatedNumbers = tempStr;
+						//Check if this number already been added
+						if(strstr(genNums, newNum) != NULL){
+							//Ignore this old number
+						} else {
+							//Add this new number to the current generated numbers string
+							char temp1[MAX_SIZE], temp2[MAX_SIZE];
+							sprintf(temp1, "%s%d#", genNums, r);
+							genNums = temp1;
+							
+							//As well the whole generated numbers
+							sprintf(temp2, "%s%d\n", allGeneratedNumbers, r);
+							allGeneratedNumbers = temp2;
 
-						//Add the new number in the current summation
-						curSum += r;
+							//Add the new number in the current summation
+							curSum += r;
 						
-						printf("%d\n", r);
+							printf("%d\n", r);
+						}
 					}
 				}
-			}
-			printf("$");
-			//Wait for any input
-			char any[MAX_SIZE];
-			fgets(any, MAX_SIZE, stdin);
-		}
-		//Write all generated numbers on the output file
-		writeOnOPFile(generatedNumbers);
+			} else {
+				//Write all generated numbers on the output file
+				writeOnOPFile(allGeneratedNumbers);
 		
-		//Return with the successful exit state
-		return 0;
-	} else {
-		perror("Error: fgets failed!");
-		return 1;
+				//Return with the successful exit state
+				return 0;
+			}
+		} else {
+			perror("Error: fgets failed!");
+			return 1;
+		}
 	}
 }
 
@@ -144,6 +250,9 @@ int monitoring(){
 		
 		//Check if this process is the worker
 		if(forkPID == 0){
+			//TODO: Start from the last checkpoint (if any)
+			
+			//Start the worker from scrach
 			keepWorking = working();
 			break;
 		} else {
@@ -189,8 +298,20 @@ int main(int argc, char** argv){
 			perror("Error: fopen failed to open a file with the following name: \n");
 			return -1;
 		}*/
+		
+		//Get the interval for checkpoints (if it was given)
+		if(argc > 2){
+			//Check if the parameter is number
+			if(is_number(argv[2])){
+				//Convert it to integer
+				cpInterval = atoi(argv[2]);
+			} else {
+				perror("Error: The program expected on the 2nd argument only a number!.\n");
+				return -1;
+			}
+		}
 	} else {
-		perror("Error: The program expected one argument to specify the output file name, nothing was given!.\n");
+		perror("Error: The program expected on the 1st argument to specify the output file name, nothing was given!.\n");
 		return -1;	
 	}
 
