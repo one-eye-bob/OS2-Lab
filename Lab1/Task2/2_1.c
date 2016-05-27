@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+
 void logThis(char* text, int arg){
 	int ret=0;
 
@@ -162,6 +163,7 @@ int main(int argc, char** argv){
 		switch(c){
 			case 'n':
 				MAX_FORKS=atoi(optarg);
+				//check for illegal range
 				if(MAX_FORKS < 1 || MAX_FORKS >50){
 					ret = fprintf(stderr, "Illegal MAX_FORKS argument (%i), set MAX_FORKS to 5\n", MAX_FORKS);
 					if (ret < 0){
@@ -173,6 +175,7 @@ int main(int argc, char** argv){
 				break;
 			case 'f':
 				fr = atoi(optarg);
+				//check for illegal range
 				if (fr < 0 || fr > 100) {
 					ret = fprintf(stderr, "Illegal failratio argument (%i), set failratio to 0\n", fr);
 					if (ret < 0){
@@ -190,7 +193,12 @@ int main(int argc, char** argv){
 				}
 		}
 	}
-	
+	// Logging program arguments
+	logThis("---\n", 0);
+	logThis("The program has the following arguments:\n", 0);
+	logThis("Max Forks = %d\n", MAX_FORKS);
+	logThis("Fail Ratio = %d\n", fr);
+	logThis("---\n", 0);
 	//start creating processes
 	backup(MAX_FORKS);
 	//init rng after backup has been done to get different seeds

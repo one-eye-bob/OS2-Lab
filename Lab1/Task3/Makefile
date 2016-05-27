@@ -20,6 +20,8 @@ test: prog
 
 clean:
 	echo "clean starts"
+	#used to automatically kill testing session
+	-pkill -f "./run -n "
 	-rm *.o $(EXEC) log.txt
-	rm -rf requests/
+	-rm -rf requests/
 	echo "clean finished"

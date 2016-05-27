@@ -2,7 +2,7 @@
 NOW="$(date)"
 echo Starting test run at $NOW >> log.txt
 make
-./run -n 10 -f 50&
+./run -n 10 -f 70&
 for i in `seq 1 100`
 do
 	var=$RANDOM
