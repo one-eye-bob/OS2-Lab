@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +74,7 @@ int isAllowedToCheckpoint() {
 	//Get the current time
 	current_time = time(0);
 	if(current_time < 0)
-		perror("Error: the function 'time' failed to set 'current_time");
+		perror("Error: the function 'time' failed to set 'current_time'");
 
 	//Calculate the difference between these times (in seconds)
 	difference = current_time - last_time;
@@ -88,49 +89,54 @@ int isAllowedToCheckpoint() {
 	return 0;
 }
 
-int makeACheckpoint(){
-	//TODO: I need to test this function
+void setCriuOptions(){
+	//Reserved for the file descriptor
+	int fd;
+
+	//Open if "checkpoints" is a directory, or fail
+	fd = open("checkpoints", O_DIRECTORY);
+
+	//Check if open didn't fail
+	if(fd == -1){
+		perror("Error: open failed to open the 'checkpoints' directory.\n");
+		//return -1;	
+	}
+
+	//Set up criu options
+	int ret = criu_init_opts();
+	if(ret == -1){
+		perror("Error: criu_init_opts failed to inital the request options.\n");
+	}
+
+	//Set the images directory, where they will be stored
+	criu_set_images_dir_fd(fd);
+
+	//Specify the CRIU service socket
+	criu_set_service_address("criu_service.socket");
+
+	//Specify how to connnect to service socket
+	criu_set_service_comm(CRIU_COMM_SK);
+	
+	//Make it to continue executing after dumping
+	criu_set_leave_running(true);
+
+	//Make it a shell job, since criu would be unable to dump otherwise
+	criu_set_shell_job(true);
+}
+
+void makeACheckpoint(int signum){
 	//Reserved to check for funtions's errors
 	int ret;
 	
 	//Check if criu need to be initalized
 	if(last_time == 0){
 		//Preparation for CRIU for the first time:
-		//Reserved for the file descriptor
-		int fd;
 	
 		//Create the "checkpoints" directory if it doesn't exist, only owner has (full) access
 		mkdir("checkpoints", 0700);
-	
-		//Open if "checkpoints" is a directory, or fail
-		fd = open("checkpoints", O_DIRECTORY);
-	
-		//Check if open didn't fail
-		if(fd == -1){
-			perror("Error: open failed to open the 'checkpoints' directory.\n");
-			return -1;	
-		}
 
-		//Set up criu options
-		ret = criu_init_opts();
-		if(ret == -1){
-			perror("Error: criu_init_opts failed to inital the request options.\n");
-		}
-	
-		//Set the images directory, where they will be stored
-		criu_set_images_dir_fd(fd);
-
-		//Specify the CRIU service socket
-		criu_set_service_address("criu_service.socket");
-	
-		//Specify how to connnect to service socket
-		criu_set_service_comm(CRIU_COMM_SK);
-		
-		//Make it to continue executing after dumping
-		criu_set_leave_running(true);
-
-		//Make it a shell job, since criu would be unable to dump otherwise
-		criu_set_shell_job(true);
+		//Set CRIU options
+		setCriuOptions();
 	}
 	
 	//Make a checkpoint
@@ -140,7 +146,7 @@ int makeACheckpoint(){
 	} else{
 		printf("Successfully took huge dump!\n");
 	}
-	//criu_set_shell_job(false);	
+	
 	//Set last_time to this time
 	last_time = time(0);
 	if(last_time < 0)
@@ -148,6 +154,11 @@ int makeACheckpoint(){
 }
 
 int working(){
+	//dump everytime we get a 10 signal
+	struct sigaction dumpAction;
+	dumpAction.sa_handler = makeACheckpoint;
+	sigaction(SIGUSR1, &dumpAction, NULL);
+	printf("Worker: Starting to work!\n");
 	//Defining the max number of character to be store in allNumbers
 	int MAX_SIZE = 100;
 
@@ -168,10 +179,11 @@ int working(){
 		//Read the input and check if no errors
 		if(fgets(input, MAX_INPUT, stdin) != NULL){
 			//Check if a checkpoint should be taken
-			if(isAllowedToCheckpoint()){
+			/*if(isAllowedToCheckpoint()){
 				//Make a checkpoint
 				makeACheckpoint();
-			}
+			}*/
+
 			int n;
 			//Convert the input to integer
 			int parsed = sscanf(input, "%d", &n);
@@ -204,6 +216,8 @@ int working(){
 						//TODO: check if failed or check MAX_SIZE
 						if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
 							perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
+						
+						//Add this new number(with return char) to all generated numbers						
 						strncat(allNumbers, rStr, MAX_INPUT);
 
 						printf("%d\n", r);
@@ -217,7 +231,7 @@ int working(){
 			}
 		} else {
 			perror("Error: fgets failed!");
-			exit(-1);
+			//exit(-1);
 		}
 	}
 }
@@ -229,58 +243,54 @@ int monitoring(){
 	//Keep monitoring forever until the worker succeeds
 	while(1){
 		//Create a worker only if we didnt create a checkpoint
-		if(!useCheckpoint) {
-		       forkPID = fork();
-		}
-		if(forkPID < 0) {
-			perror("Error: fork couldn't create a child!");
-			//Loop again
-			continue;
+		if(!useCheckpoint){
+			if((forkPID = fork()) < 0){
+				perror("Error: fork couldn't create a child!");
+				//Loop again
+				continue;
+			}
 		}
 		
 		//Check if this process is the worker
-		if(forkPID == 0){
+		if(forkPID == 0)
 			//Start the worker from scrach
 			working();
-		} else {
+		else {
 			//Reserved for the status of the worker after it was terminated
 			int status;
+
+			int waitPID;
+			do {
+				printf("Monitor: Wait before making a checkpoint!\n");
+				usleep(cpInterval*1000000);
+				printf("Monitor: Send a siganl to make a checkpoint!\n");
+				//time to send dump request
+				kill(forkPID, SIGUSR1);
+				printf("Monitor: wait for thw worker to respond!\n");
+				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
+				//alarm(cpInterval);	
+				//Wait for the worker until it terminates
+				waitPID = waitpid((pid_t)forkPID, &status, 0);
+			//wait again if the process was interrupted by alarm
+			} while (waitPID == -1 && errno == EINTR);
 			
 			//Wait for the worker until it terminates
-			int waitPID = waitpid((pid_t)forkPID, &status, 0);
+			//waitPID = waitpid((pid_t)forkPID, &status, 0);
 
 			if(waitPID < 0)
 				perror("Error: waitpid couldn't let the monitor wait until the worker has finished");
 			else if(WIFEXITED(status))
 				if(WEXITSTATUS(status)){
-					//Monitor: This worker failed, I better hire a better one!
+					//Monitor: This worker failed
+					//Set CRIU options before restoring the last safe state
+					setCriuOptions();
 
-					criu_init_opts();
-
-					//Open if "checkpoints" is a directory, or fail
-					int fd = open("checkpoints", O_DIRECTORY);
-					
-					//Set the images directory, where they will be stored
-					criu_set_images_dir_fd(fd);
-
-					//Specify the CRIU service socket
-					criu_set_service_address("criu_service.socket");
-				
-					//Specify how to connnect to service socket
-					criu_set_service_comm(CRIU_COMM_SK);
-					
-					//continue executing after dumping
-					criu_set_leave_running(true);
-
-					//make it a shell job, since criu would be unable to dump otherwise
-					criu_set_shell_job(true);
-
-					//TODO: only works if checkpoint already exists
+					//Restore the worker from last safe state
 					if((forkPID = criu_restore_child()) < 0) {
-						perror("failed to restore child!\n");
+						perror("Error: criu_restore_child failed to restore child!\n");
 					}else{
-						printf("Successfully restored child with pid:%d!\n", forkPID);
-						useCheckpoint=true;
+						printf("Successfully restored child with pid: %d\n", forkPID);
+						useCheckpoint = true;
 					}
 				} else {
 					//Monitor: The worker succeeded!
@@ -305,7 +315,7 @@ int main(int argc, char** argv){
 		if(argc > 2){
 			//Check if the parameter is number
 			if(sscanf(argv[2], "%d", &cpInterval) != 1){
-							perror("Error: The program expected on the 2nd argument only a number!.\n");
+				perror("Error: The program expected on the 2nd argument only a number!.\n");
 				return -1;
 			}
 		}
