@@ -72,9 +72,12 @@ int isAllowedToCheckpoint() {
 
 	//Get the current time
 	current_time = time(0);
+	if(current_time < 0)
+		perror("Error: the function 'time' failed to set 'current_time");
 
 	//Calculate the difference between these times (in seconds)
 	difference = current_time - last_time;
+	
 	//Is the last checkpoint time old
 	if(difference >= cpInterval){
 		//Free to take a new checkpoint
@@ -92,11 +95,12 @@ int makeACheckpoint(){
 	
 	//Check if criu need to be initalized
 	if(last_time == 0){
+		//Preparation for CRIU for the first time:
 		//Reserved for the file descriptor
 		int fd;
 	
 		//Create the "checkpoints" directory if it doesn't exist, only owner has (full) access
-		mkdir("checkpoints", 0700); //0700
+		mkdir("checkpoints", 0700);
 	
 		//Open if "checkpoints" is a directory, or fail
 		fd = open("checkpoints", O_DIRECTORY);
@@ -113,7 +117,6 @@ int makeACheckpoint(){
 			perror("Error: criu_init_opts failed to inital the request options.\n");
 		}
 	
-	
 		//Set the images directory, where they will be stored
 		criu_set_images_dir_fd(fd);
 
@@ -122,9 +125,11 @@ int makeACheckpoint(){
 	
 		//Specify how to connnect to service socket
 		criu_set_service_comm(CRIU_COMM_SK);
-		//continue executing after dumping
+		
+		//Make it to continue executing after dumping
 		criu_set_leave_running(true);
-		//make it a shell job, since criu would be unable to dump otherwise
+
+		//Make it a shell job, since criu would be unable to dump otherwise
 		criu_set_shell_job(true);
 	}
 	
@@ -138,6 +143,8 @@ int makeACheckpoint(){
 	//criu_set_shell_job(false);	
 	//Set last_time to this time
 	last_time = time(0);
+	if(last_time < 0)
+		perror("Error: the function 'time' failed to set 'last_time'");
 }
 
 int working(){
@@ -153,12 +160,12 @@ int working(){
 	//Reserved for the first input, which should be integer
 	char input[MAX_INPUT];
 
-	//Loop forever until and exit in some conditions
+	//Loop forever and exit in some conditions
 	while(1){
-		//Tell the user to enter to type
-		printf("$");
+		//Tell the user to enter and type
+		printf("$ ");
 
-		//Read the first input and check if no errors
+		//Read the input and check if no errors
 		if(fgets(input, MAX_INPUT, stdin) != NULL){
 			//Check if a checkpoint should be taken
 			if(isAllowedToCheckpoint()){
@@ -167,17 +174,14 @@ int working(){
 			}
 			int n;
 			//Convert the input to integer
-			int parsed = sscanf(input,"%d", &n);
+			int parsed = sscanf(input, "%d", &n);
 			
 			//Check if conversion was successful 
 			if(parsed >= 1){
 				//To save the following generated numbers as a string
 				char* genNums = "#";
 
-				//Convert the input to integer
-				//int n = atoi(input);
-
-				//Check in input number
+				//Check the input number
 				if(n < 0)
 					//Exit with returning the value n
 					exit(n);
@@ -186,23 +190,26 @@ int working(){
 					srand(getpid());
 
 					int i;
-					//create n random numbers
+					//Create n random numbers
 					for(i=0 ; i < n ; ++i){
 						//Get a random number smaller than n
 						int r = rand() % (n+1);
 
 						//Concatenate the integer r with the return char
-						//TODO: check if failed or check MAX_SIZE
 						char rStr[MAX_INPUT];
-						sprintf(rStr, "%d\n", r);
+						int ret = sprintf(rStr, "%d\n", r);
+						if(ret < 0)
+							perror("Error: sprintf failed");
+
+						//TODO: check if failed or check MAX_SIZE
+						if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
+							perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
 						strncat(allNumbers, rStr, MAX_INPUT);
-						//sprintf(allNumbers, "#%d#", r);
+
 						printf("%d\n", r);
 					}
-				}
-				
+				}	
 			} else {
-
 				//Write all generated numbers on the output file
 				writeOnOPFile(allNumbers);
 				//Return with the successful exit state
@@ -218,7 +225,8 @@ int working(){
 int monitoring(){
 	int forkPID;
 	bool useCheckpoint = false;
-	//keep monitoring for ever until the worker succeeds
+
+	//Keep monitoring forever until the worker succeeds
 	while(1){
 		//Create a worker only if we didnt create a checkpoint
 		if(!useCheckpoint) {
@@ -241,41 +249,45 @@ int monitoring(){
 			//Wait for the worker until it terminates
 			int waitPID = waitpid((pid_t)forkPID, &status, 0);
 
-			if(waitPID < 0){
+			if(waitPID < 0)
 				perror("Error: waitpid couldn't let the monitor wait until the worker has finished");
-			} else if(WIFEXITED(status)){
+			else if(WIFEXITED(status))
 				if(WEXITSTATUS(status)){
-					//Monitor: This worker%i failed, I better hire a better one!
+					//Monitor: This worker failed, I better hire a better one!
+
 					criu_init_opts();
+
 					//Open if "checkpoints" is a directory, or fail
 					int fd = open("checkpoints", O_DIRECTORY);
 					
 					//Set the images directory, where they will be stored
 					criu_set_images_dir_fd(fd);
+
 					//Specify the CRIU service socket
 					criu_set_service_address("criu_service.socket");
 				
 					//Specify how to connnect to service socket
 					criu_set_service_comm(CRIU_COMM_SK);
+					
 					//continue executing after dumping
 					criu_set_leave_running(true);
+
 					//make it a shell job, since criu would be unable to dump otherwise
 					criu_set_shell_job(true);
+
 					//TODO: only works if checkpoint already exists
-					if(( forkPID = criu_restore_child()) <0) {
-						perror("failed to restore child! \n!");
+					if((forkPID = criu_restore_child()) < 0) {
+						perror("failed to restore child!\n");
 					}else{
-						printf("Successfully restored child with pid:%d!\n", pid);
+						printf("Successfully restored child with pid:%d!\n", forkPID);
 						useCheckpoint=true;
 					}
 				} else {
 					//Monitor: The worker succeeded!
 					exit(0);
 				}
-			}
 		}
 	}
-
 }
 
 int main(int argc, char** argv){
@@ -288,16 +300,6 @@ int main(int argc, char** argv){
 	if(argc > 1){
 		//Get the first argument to be the output file name
 		outputFN = argv[1];
-
-		/*TODO: these lines are not importnat, since writeOnOPFile will redo the same job!
-		//Get the output file or create a new one
-		outputF = fopen(outputFN, "a");
-		
-		//Check of the file could be opened
-		if(outputF == NULL){
-			perror("Error: fopen failed to open a file with the following name: \n");
-			return -1;
-		}*/
 		
 		//Get the interval for checkpoints (if it was given)
 		if(argc > 2){
@@ -313,6 +315,5 @@ int main(int argc, char** argv){
 	}
 
 	//Start monitoring
-	monitoring();
-	
+	monitoring();	
 }
