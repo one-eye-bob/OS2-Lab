@@ -25,4 +25,4 @@ test: prog
 
 clean:
 	# Delete everything except c files and Makefile
-	sudo find . ! -name *.c ! -name Makefile -delete
+	sudo find . ! -name *.c ! -name Makefile ! -name Task2.3 -delete
