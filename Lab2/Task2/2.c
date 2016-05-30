@@ -270,9 +270,9 @@ int monitoring(){
 				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
 				//alarm(cpInterval);	
 				//Wait for the worker until it terminates
-				waitPID = waitpid((pid_t)forkPID, &status, 0);
+				waitPID = waitpid((pid_t)forkPID, &status, WNOHANG);
 			//wait again if the process was interrupted by alarm
-			} while (waitPID == -1 && errno == EINTR);
+			} while (waitPID == 0 );
 			
 			//Wait for the worker until it terminates
 			//waitPID = waitpid((pid_t)forkPID, &status, 0);

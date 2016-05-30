@@ -242,16 +242,16 @@ int monitoring(){
 		} else {
 			//Reserved for the status of the worker after it was terminated
 			int status;
-			
+			int waitPID;	
 			do {
 				//time to send dump request
 				kill(forkPID,SIGUSR1);
 				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
 				alarm(5);	
 				//Wait for the worker until it terminates
-				int waitPID = waitpid((pid_t)forkPID, &status, 0);
+				waitPID = waitpid((pid_t)forkPID, &status, 0);
 			//wait again if the process was interrupted by alarm
-			} while (waitPID == -1 && errno == EINTR)
+			} while (waitPID == -1 && errno == EINTR);
 
 			if(waitPID < 0){
 				perror("Error: waitpid couldn't let the monitor wait until the worker has finished");
