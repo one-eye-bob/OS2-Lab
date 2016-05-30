@@ -170,6 +170,9 @@ int working(){
 
 	//Reserved for the first input, which should be integer
 	char input[MAX_INPUT];
+					
+	//Initial the range to get different seeds
+	srand(getpid());
 
 	//Loop forever and exit in some conditions
 	while(1){
@@ -198,8 +201,6 @@ int working(){
 					//Exit with returning the value n
 					exit(n);
 				else {
-					//Initial the range to get different seeds
-					srand(getpid());
 
 					int i;
 					//Create n random numbers
@@ -266,7 +267,7 @@ int monitoring(){
 				printf("Monitor: Send a siganl to make a checkpoint!\n");
 				//time to send dump request
 				kill(forkPID, SIGUSR1);
-				printf("Monitor: wait for thw worker to respond!\n");
+				//printf("Monitor: wait for the worker to respond!\n");
 				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
 				//alarm(cpInterval);	
 				//Wait for the worker until it terminates
