@@ -21,15 +21,31 @@ int cpInterval;
 //Reserved for the time of the last checkpoint
 time_t last_time;
 
+//Reserved for the already generated numbers
+char* allNumbers = NULL;
+
 //Reserved for the state info for checkpoints
-char* allNumbers;
+int c_i=0;
+int c_n=0;
 
 int checkpoint(int signum) { //TODO: i and n?
 	//Reserved to check for functions' errors
 	int ret = 0;
 
+	//the output text for i and n
+	char loop_state[2];
+	sprintf(loop_state, "%i%i", c_i,c_n);
+	printf("loop_state: %s\n", loop_state);
+
+	//whole output
+	char outputText[102];
+	strncpy(outputText,loop_state,2);
+	strncpy(outputText + 2,allNumbers,100);
+
+	printf("Writing %s\n", outputText);
+
 	//Get the output file or create a new one
-	FILE* outputF = fopen("checkpoint.dat", "a");
+	FILE* outputF = fopen("checkpoint.dat", "wb"); //open in wb mode so we overwrite every time
 		
 	//Check of the file could be opened
 	if(outputF == NULL){
@@ -38,7 +54,8 @@ int checkpoint(int signum) { //TODO: i and n?
 	}
 
 	//Print the state-string in the output file
-	ret = fprintf(outputF, "%s", allNumbers);
+
+	ret = fprintf(outputF, "%s", outputText);
 	if(ret < 0){
 		perror("Error: fprintf could not write\n");
 		return -1;
@@ -58,6 +75,12 @@ int restore() {
 	//Reserved to check for functions' errors
 	int ret = 0;
 
+	//Allocate allNumbers
+	if (allNumbers==NULL) {
+		//Not returning from a checkpoint, allocate memory for allNumbers
+		allNumbers = malloc(100 * sizeof(char));
+	}
+
 	//Get the output file or create a new one
 	FILE* inputF = fopen("checkpoint.dat", "r");
 
@@ -67,13 +90,18 @@ int restore() {
 		return -1;
 	}
 
-	char inputText[100];
+	char inputText[102];
 
-	ret = fread(inputText,sizeof(char),100,inputF);
+	ret = fread(inputText,sizeof(char),102,inputF);
 	if(ret < 0){
 		perror("Error: fread could not read\n");
 		return -1;
 	}
+	//write \0 terminator
+	//strncpy(inputText + ret,"\0",1);
+	inputText[ret]='\0';
+
+	printf("restoring %s\n", inputText);
 
 	//Close the input file
 	ret = fclose(inputF);
@@ -81,8 +109,12 @@ int restore() {
 		perror("Error: could not close the input file!\n");
 		return -1;
 	}
+	c_i = inputText[0] - '0'; //convert to int
+	c_n = inputText[1] - '0';
+	printf("i and n: %d %d\n", c_i, c_n);
+	strcpy(allNumbers,inputText + 2);//*sizeof(char));
 
-	allNumbers = inputText;
+	printf("restored %d %d %s\n", c_i, c_n, allNumbers);
 
 	ret = working();
 	return ret;
@@ -227,11 +259,16 @@ int working(){
 	printf("Worker: Starting to work!\n");
 	//Defining the max number of character to be store in allNumbers
 	int MAX_SIZE = 100;
+	bool return_to_loop=false;
+	//variables for the for-loop have to be initialised beforehand
+	int i = 0;
+	int n = 0;
 
 	if (allNumbers==NULL) {
 		//Not returning from a checkpoint, allocate memory for allNumbers
 		allNumbers = malloc(MAX_SIZE * sizeof(char));
 	}
+	
 	//Defining the max number of characters as input (integer with '-')
 	int MAX_INPUT = 11;
 
@@ -240,6 +277,30 @@ int working(){
 					
 	//Initial the range to get different seeds
 	srand(getpid());
+
+	if (c_n != 0 && c_i < c_n) {
+		//Returning from a checkpoint taken from the inside of the loop
+		//TODO what if allNumbers has already been enhanced?
+		i = c_i;
+		n = c_n;
+		//Create remaining random numbers
+		for(; i < n ; ++i){
+			//Get a random number smaller than n
+			int r = rand() % (n+1);
+			//Concatenate the integer r with the return char
+			char rStr[MAX_INPUT];
+			int ret = sprintf(rStr, "%d\n", r);
+			if(ret < 0)
+				perror("Error: sprintf failed");
+			//TODO: check if failed or check MAX_SIZE
+			if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
+				perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
+		
+			//Add this new number(with return char) to all generated numbers					
+			strncat(allNumbers, rStr, MAX_INPUT);
+			printf("%d\n", r);
+		}
+	}
 
 	//Loop forever and exit in some conditions
 	while(1){
@@ -254,7 +315,6 @@ int working(){
 				makeACheckpoint();
 			}*/
 
-			int n;
 			//Convert the input to integer
 			int parsed = sscanf(input, "%d", &n);
 			
@@ -269,7 +329,6 @@ int working(){
 					exit(n);
 				else {
 
-					int i;
 					//Create n random numbers
 					for(i=0 ; i < n ; ++i){
 						//Get a random number smaller than n
