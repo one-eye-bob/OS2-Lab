@@ -39,19 +39,30 @@ int checkpoint(int signum) {
 
 	//whole output
 	char outputText[102];
+	char outputTextwithTime[120];
 	strncpy(outputText,loop_state,2);
 	strncpy(outputText + 2,allNumbers,100);
+	strcpy(outputTextwithTime,outputText);
+
+	//Get the current time
+	time_t t_ret = time(0);
+	if(t_ret < 0)
+		perror("Error: the function 'checkpoint' failed to set 't_ret'");
+
+	strcpy(outputTextwithTime,t_ret);
 
 	printf("Writing %s\n", outputText);
 
 	//Get the output file or create a new one
 	FILE* outputF = fopen("checkpoint.dat", "wb"); //open in wb mode so we overwrite every time
-		
+	FILE* outputF2 = fopen("checkpoint.timestamp.dat", "wb"); //open in wb mode so we overwrite every time	
 	//Check of the file could be opened
 	if(outputF == NULL){
 		perror("Error: fopen failed to open the \"checkpoint.dat\" file! \n");
 		return -1;
 	}
+
+	
 
 	//Print the state-string in the output file
 
@@ -63,6 +74,27 @@ int checkpoint(int signum) {
 
 	//Close the output file
 	ret = fclose(outputF);
+	if(ret < 0){
+		perror("Error: could not close the output file!\n");
+		return -1;
+	}
+
+	//Check of the file could be opened
+	if(outputF2 == NULL){
+		perror("Error: fopen failed to open the \"checkpoint.timestamp.dat\" file! \n");
+		return -1;
+	}
+
+	//Print the state-string in the output file
+
+	ret = fprintf(outputF2, "%s", outputTextwithTime);
+	if(ret < 0){
+		perror("Error: fprintf could not write\n");
+		return -1;
+	}
+
+	//Close the output file
+	ret = fclose(outputF2);
 	if(ret < 0){
 		perror("Error: could not close the output file!\n");
 		return -1;
