@@ -28,7 +28,7 @@ char* allNumbers = NULL;
 int c_i=0;
 int c_n=0;
 
-int checkpoint(int signum) { //TODO: i and n?
+int checkpoint(int signum) {
 	//Reserved to check for functions' errors
 	int ret = 0;
 
@@ -260,9 +260,7 @@ int working(){
 	//Defining the max number of character to be store in allNumbers
 	int MAX_SIZE = 100;
 	bool return_to_loop=false;
-	//variables for the for-loop have to be initialised beforehand
-	int i = 0;
-	int n = 0;
+
 
 	if (allNumbers==NULL) {
 		//Not returning from a checkpoint, allocate memory for allNumbers
@@ -281,12 +279,11 @@ int working(){
 	if (c_n != 0 && c_i < c_n) {
 		//Returning from a checkpoint taken from the inside of the loop
 		//TODO what if allNumbers has already been enhanced?
-		i = c_i;
-		n = c_n;
+
 		//Create remaining random numbers
-		for(; i < n ; ++i){
+		for(; c_i < c_n ; ++c_i){
 			//Get a random number smaller than n
-			int r = rand() % (n+1);
+			int r = rand() % (c_n+1);
 			//Concatenate the integer r with the return char
 			char rStr[MAX_INPUT];
 			int ret = sprintf(rStr, "%d\n", r);
@@ -300,6 +297,9 @@ int working(){
 			strncat(allNumbers, rStr, MAX_INPUT);
 			printf("%d\n", r);
 		}
+		//reset parameters to tell checkpointing that we're outside the loop
+		c_n = 0;
+		c_i = 0;
 	}
 
 	//Loop forever and exit in some conditions
@@ -316,7 +316,7 @@ int working(){
 			}*/
 
 			//Convert the input to integer
-			int parsed = sscanf(input, "%d", &n);
+			int parsed = sscanf(input, "%d", &c_n);
 			
 			//Check if conversion was successful 
 			if(parsed >= 1){
@@ -324,15 +324,15 @@ int working(){
 				char* genNums = "#";
 
 				//Check the input number
-				if(n < 0)
+				if(c_n < 0)
 					//Exit with returning the value n
-					exit(n);
+					exit(c_n);
 				else {
 
 					//Create n random numbers
-					for(i=0 ; i < n ; ++i){
+					for(c_i=0 ; c_i < c_n ; ++c_i){
 						//Get a random number smaller than n
-						int r = rand() % (n+1);
+						int r = rand() % (c_n+1);
 
 						//Concatenate the integer r with the return char
 						char rStr[MAX_INPUT];
@@ -349,6 +349,9 @@ int working(){
 
 						printf("%d\n", r);
 					}
+					//reset parameters to tell checkpointing that we're outside the loop
+					c_n = 0;
+					c_i = 0;
 				}	
 			} else {
 				//Write all generated numbers on the output file
