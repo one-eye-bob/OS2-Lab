@@ -14,7 +14,7 @@
 #include <regex.h>
 
 //The maximum number of matches allowed in a single string
-#define MAX_MATCHES 1
+int MAX_MATCHES =1;
 
 //filename of the checkpoints
 char filename[100];
@@ -101,17 +101,17 @@ int restore() {
 		allNumbers = malloc(100 * sizeof(char));
 	}
 
+  	char dataNames[100][100];
 
    	DIR *d;
   	struct dirent *dir;
-  	char dataNames[100][100];
   	int i = 0;
   	d = opendir(".");
   	if (d)
   	{
     	while ((dir = readdir(d)) != NULL)
     		{
-      			printf("%s\n", dir->d_name);
+      			//printf("%s\n", dir->d_name);
 				dataNames[i][0] = dir->d_name;
 				i++;
     		}
@@ -130,16 +130,17 @@ int restore() {
 	for(int i=0;i<sizeof(dataNames);i++)
     {
     	//2. Search for expressions
-    	match(&exp, dataNames[i]);
+    	//match(&exp, dataNames[i][0]);
     }
     //3. Free it
 	regfree(&exp);
 
   	//search for latest Timestamp
   	int highestTimeStamp=0;
-
-  	for(int i=0;i<sizeof(dataNames);i++)
+  	printf("%d",sizeof dataNames/ sizeof dataNames[0]);
+  	for(int i=0;i<sizeof dataNames/ sizeof dataNames[0];i++)
     {
+    	printf("%s ####\n",dataNames[i][0]);
        // if(array[i]>highestTimeStamp)
        // 	highestTimeStamp=dataNames[i];
     }
@@ -182,7 +183,6 @@ int restore() {
 	ret = working();
 	return ret;
 }
-
 void match(regex_t *pexp, char *sz) {
 	regmatch_t matches[MAX_MATCHES]; //A list of the matches in the string (a list of 1)
 	//Compare the string to the expression
@@ -342,10 +342,10 @@ int working(){
 	}
 	
 	//Defining the max number of characters as input (integer with '-')
-	int MAX_INPUT = 11;
+	int MAXINPUT = 11;
 
 	//Reserved for the first input, which should be integer
-	char input[MAX_INPUT];
+	char input[MAXINPUT];
 					
 	//Initial the range to get different seeds
 	srand(getpid());
@@ -359,16 +359,16 @@ int working(){
 			//Get a random number smaller than n
 			int r = rand() % (c_n+1);
 			//Concatenate the integer r with the return char
-			char rStr[MAX_INPUT];
+			char rStr[MAXINPUT];
 			int ret = sprintf(rStr, "%d\n", r);
 			if(ret < 0)
 				perror("Error: sprintf failed");
 			//TODO: check if failed or check MAX_SIZE
-			if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
+			if((strlen(allNumbers)+MAXINPUT+1) > MAX_SIZE)
 				perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
 		
 			//Add this new number(with return char) to all generated numbers					
-			strncat(allNumbers, rStr, MAX_INPUT);
+			strncat(allNumbers, rStr, MAXINPUT);
 			printf("%d\n", r);
 		}
 		//reset parameters to tell checkpointing that we're outside the loop
@@ -382,7 +382,7 @@ int working(){
 		printf("$ ");
 
 		//Read the input and check if no errors
-		if(fgets(input, MAX_INPUT, stdin) != NULL){
+		if(fgets(input, MAXINPUT, stdin) != NULL){
 			//Check if a checkpoint should be taken
 			/*if(isAllowedToCheckpoint()){
 				//Make a checkpoint
@@ -409,17 +409,17 @@ int working(){
 						int r = rand() % (c_n+1);
 
 						//Concatenate the integer r with the return char
-						char rStr[MAX_INPUT];
+						char rStr[MAXINPUT];
 						int ret = sprintf(rStr, "%d\n", r);
 						if(ret < 0)
 							perror("Error: sprintf failed");
 
 						//TODO: check if failed or check MAX_SIZE
-						if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
+						if((strlen(allNumbers)+MAXINPUT+1) > MAX_SIZE)
 							perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
 						
 						//Add this new number(with return char) to all generated numbers						
-						strncat(allNumbers, rStr, MAX_INPUT);
+						strncat(allNumbers, rStr, MAXINPUT);
 
 						printf("%d\n", r);
 					}
