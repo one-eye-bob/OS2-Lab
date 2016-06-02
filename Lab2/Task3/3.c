@@ -101,7 +101,7 @@ int restore() {
 		allNumbers = malloc(100 * sizeof(char));
 	}
 
-  	char dataNames[100][100];
+  	char dataNames[100*100];
 
    	DIR *d;
   	struct dirent *dir;
@@ -112,7 +112,7 @@ int restore() {
     	while ((dir = readdir(d)) != NULL)
     		{
       			//printf("%s\n", dir->d_name);
-				dataNames[i][0] = dir->d_name;
+				strcpy(dataNames+i*100,dir->d_name);
 				i++;
     		}
 
@@ -120,31 +120,42 @@ int restore() {
   	}
 
 	int rv;
-	regex_t exp; //Our compiled expression
-	//1. Compile our expression.
+	regex_t exp; // compiled expression
+	// Compile expression.
 	rv = regcomp(&exp, "checkpoint.*.dat", REG_EXTENDED);
 	if (rv != 0) {
 		printf("regcomp failed with %d\n", rv);
 	}
 
-	for(int i=0;i<sizeof(dataNames);i++)
+	char* matchRet;
+	int timeStampArray[100],l=0;
+	for(int k=0;k<i;k++)
     {
-    	//2. Search for expressions
-    	//match(&exp, dataNames[i][0]);
+    	char timestamp[15];
+    	//printf(" %s \n",dataNames+k*100);
+    	matchRet = match(&exp, dataNames+k*100);
+    	memcpy( timestamp, &matchRet[11], 10);
+		timestamp[10] = '\0';
+		printf("restore tmestamp: %s\n",timestamp);
+    	if(matchRet != 0){
+    		timeStampArray[l] = matchRet;
+    		printf("match: %i \n", timeStampArray[l]);
+    		l++;
+    	}
     }
-    //3. Free it
+    // Free Expression
 	regfree(&exp);
 
   	//search for latest Timestamp
   	int highestTimeStamp=0;
-  	printf("%d",sizeof dataNames/ sizeof dataNames[0]);
-  	for(int i=0;i<sizeof dataNames/ sizeof dataNames[0];i++)
+  
+  	for(int m=0;m<sizeof(timeStampArray);m++)
     {
-    	printf("%s ####\n",dataNames[i][0]);
-       // if(array[i]>highestTimeStamp)
-       // 	highestTimeStamp=dataNames[i];
-    }
+        if(timeStampArray[m]>highestTimeStamp)
+        	highestTimeStamp=timeStampArray[m];
 
+    }
+	printf("%i\n", highestTimeStamp);
 	//Get the output file or create a new one
 	FILE* inputF = fopen("checkpoint.dat", "r");
 
@@ -187,10 +198,18 @@ void match(regex_t *pexp, char *sz) {
 	regmatch_t matches[MAX_MATCHES]; //A list of the matches in the string (a list of 1)
 	//Compare the string to the expression
 	//regexec() returns 0 on match, otherwise REG_NOMATCH
+	char timestamp[15];
+	
+
 	if (regexec(pexp, sz, MAX_MATCHES, matches, 0) == 0) {
-		printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
+		//printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
+		memcpy( timestamp, &sz[11], 10);
+		timestamp[10] = '\0';
+		printf("match timestamp: %s\n",timestamp);
+		return sz;
 	} else {
 		printf("\"%s\" does not match\n", sz);
+		return 0;
 	}
 }
 
