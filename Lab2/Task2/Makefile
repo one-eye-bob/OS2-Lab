@@ -9,6 +9,7 @@ TASK=2
 prog: $(TASK).o
 	sudo criu service -d
 	$(CC) $(CFLAGS) -o $(EXEC) $(TASK).o $(LIBS)
+	#use: sudo ./run (output filename) (interval in seconds)
 
 $(TASK).o: $(TASK).c
 	$(CC) -c $(TASK).c
@@ -25,4 +26,4 @@ test: prog
 
 clean:
 	# Delete everything except c files and Makefile
-	sudo find . ! -name *.c ! -name Makefile ! -name Task2.3 -delete
+	sudo find . ! -name *.c ! -name Makefile -delete

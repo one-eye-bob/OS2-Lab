@@ -144,7 +144,7 @@ void makeACheckpoint(int signum){
 	if(ret < 0){
 		perror("Error: criu_dump failed!");
 	} else{
-		printf("Successfully took huge dump!\n");
+		printf("\nSuccessfully took huge dump!\n");
 	}
 	
 	//Set last_time to this time
@@ -154,10 +154,11 @@ void makeACheckpoint(int signum){
 }
 
 int working(){
-	//dump everytime we get a 10 signal
+	//Dump everytime SIGUSR1 is received
 	struct sigaction dumpAction;
 	dumpAction.sa_handler = makeACheckpoint;
 	sigaction(SIGUSR1, &dumpAction, NULL);
+
 	printf("Worker: Starting to work!\n");
 	//Defining the max number of character to be store in allNumbers
 	int MAX_SIZE = 100;
@@ -181,27 +182,17 @@ int working(){
 
 		//Read the input and check if no errors
 		if(fgets(input, MAX_INPUT, stdin) != NULL){
-			//Check if a checkpoint should be taken
-			/*if(isAllowedToCheckpoint()){
-				//Make a checkpoint
-				makeACheckpoint();
-			}*/
-
 			int n;
 			//Convert the input to integer
 			int parsed = sscanf(input, "%d", &n);
 			
 			//Check if conversion was successful 
 			if(parsed >= 1){
-				//To save the following generated numbers as a string
-				char* genNums = "#";
-
 				//Check the input number
 				if(n < 0)
 					//Exit with returning the value n
 					exit(n);
 				else {
-
 					int i;
 					//Create n random numbers
 					for(i=0 ; i < n ; ++i){
@@ -214,7 +205,7 @@ int working(){
 						if(ret < 0)
 							perror("Error: sprintf failed");
 
-						//TODO: check if failed or check MAX_SIZE
+						//Check of allNumbers reaches MAX_SIZE
 						if((strlen(allNumbers)+MAX_INPUT+1) > MAX_SIZE)
 							perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
 						
@@ -232,7 +223,6 @@ int working(){
 			}
 		} else {
 			perror("Error: fgets failed!");
-			//exit(-1);
 		}
 	}
 }
@@ -262,18 +252,15 @@ int monitoring(){
 
 			int waitPID;
 			do {
-				printf("Monitor: Wait before making a checkpoint!\n");
+				//printf("Monitor: Waiting before making a checkpoint!\n");
 				usleep(cpInterval*1000000);
-				printf("Monitor: Send a siganl to make a checkpoint!\n");
+				//printf("Monitor: Sending a siganl to make a checkpoint!\n");
 				//time to send dump request
 				kill(forkPID, SIGUSR1);
-				//printf("Monitor: wait for the worker to respond!\n");
-				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
-				//alarm(cpInterval);	
-				//Wait for the worker until it terminates
+				//printf("Monitor: waiting for the worker to respond!\n");
 				waitPID = waitpid((pid_t)forkPID, &status, WNOHANG);
 			//wait again if the process was interrupted by alarm
-			} while (waitPID == 0 );
+			} while (waitPID == 0);
 			
 			//Wait for the worker until it terminates
 			//waitPID = waitpid((pid_t)forkPID, &status, 0);
