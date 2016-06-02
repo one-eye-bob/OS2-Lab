@@ -10,7 +10,14 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <dirent.h> 
+#include <regex.h>
 
+//The maximum number of matches allowed in a single string
+#define MAX_MATCHES 1
+
+//filename of the checkpoints
+char filename[100];
 
 //Reserved for the output file name
 char* outputFN;
@@ -34,28 +41,30 @@ int checkpoint(int signum) {
 
 	//the output text for i and n
 	char loop_state[2];
+	char formatedTime[26];
 	sprintf(loop_state, "%i%i", c_i,c_n);
 	printf("loop_state: %s\n", loop_state);
 
 	//whole output
 	char outputText[102];
-	char outputTextwithTime[120];
 	strncpy(outputText,loop_state,2);
 	strncpy(outputText + 2,allNumbers,100);
-	strcpy(outputTextwithTime,outputText);
 
 	//Get the current time
 	time_t t_ret = time(0);
 	if(t_ret < 0)
 		perror("Error: the function 'checkpoint' failed to set 't_ret'");
 
-	strcpy(outputTextwithTime,t_ret);
+	ret = sprintf(filename, "%s.%d.dat", "checkpoint", t_ret);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
 
 	printf("Writing %s\n", outputText);
 
 	//Get the output file or create a new one
-	FILE* outputF = fopen("checkpoint.dat", "wb"); //open in wb mode so we overwrite every time
-	FILE* outputF2 = fopen("checkpoint.timestamp.dat", "wb"); //open in wb mode so we overwrite every time	
+	FILE* outputF = fopen(filename, "wb"); //open in wb mode so we overwrite every time
 	//Check of the file could be opened
 	if(outputF == NULL){
 		perror("Error: fopen failed to open the \"checkpoint.dat\" file! \n");
@@ -79,27 +88,6 @@ int checkpoint(int signum) {
 		return -1;
 	}
 
-	//Check of the file could be opened
-	if(outputF2 == NULL){
-		perror("Error: fopen failed to open the \"checkpoint.timestamp.dat\" file! \n");
-		return -1;
-	}
-
-	//Print the state-string in the output file
-
-	ret = fprintf(outputF2, "%s", outputTextwithTime);
-	if(ret < 0){
-		perror("Error: fprintf could not write\n");
-		return -1;
-	}
-
-	//Close the output file
-	ret = fclose(outputF2);
-	if(ret < 0){
-		perror("Error: could not close the output file!\n");
-		return -1;
-	}
-
 	return 0;
 }
 
@@ -112,6 +100,49 @@ int restore() {
 		//Not returning from a checkpoint, allocate memory for allNumbers
 		allNumbers = malloc(100 * sizeof(char));
 	}
+
+
+   	DIR *d;
+  	struct dirent *dir;
+  	char dataNames[100][100];
+  	int i = 0;
+  	d = opendir(".");
+  	if (d)
+  	{
+    	while ((dir = readdir(d)) != NULL)
+    		{
+      			printf("%s\n", dir->d_name);
+				dataNames[i][0] = dir->d_name;
+				i++;
+    		}
+
+    	closedir(d);
+  	}
+
+	int rv;
+	regex_t exp; //Our compiled expression
+	//1. Compile our expression.
+	rv = regcomp(&exp, "checkpoint.*.dat", REG_EXTENDED);
+	if (rv != 0) {
+		printf("regcomp failed with %d\n", rv);
+	}
+
+	for(int i=0;i<sizeof(dataNames);i++)
+    {
+    	//2. Search for expressions
+    	match(&exp, dataNames[i]);
+    }
+    //3. Free it
+	regfree(&exp);
+
+  	//search for latest Timestamp
+  	int highestTimeStamp=0;
+
+  	for(int i=0;i<sizeof(dataNames);i++)
+    {
+       // if(array[i]>highestTimeStamp)
+       // 	highestTimeStamp=dataNames[i];
+    }
 
 	//Get the output file or create a new one
 	FILE* inputF = fopen("checkpoint.dat", "r");
@@ -150,6 +181,17 @@ int restore() {
 
 	ret = working();
 	return ret;
+}
+
+void match(regex_t *pexp, char *sz) {
+	regmatch_t matches[MAX_MATCHES]; //A list of the matches in the string (a list of 1)
+	//Compare the string to the expression
+	//regexec() returns 0 on match, otherwise REG_NOMATCH
+	if (regexec(pexp, sz, MAX_MATCHES, matches, 0) == 0) {
+		printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
+	} else {
+		printf("\"%s\" does not match\n", sz);
+	}
 }
 
 int writeOnOPFile(char* outputText){
