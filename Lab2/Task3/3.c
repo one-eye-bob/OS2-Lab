@@ -91,19 +91,28 @@ int checkpoint(int signum) {
 	return 0;
 }
 
-int restore() {
-	//Reserved to check for functions' errors
-	int ret = 0;
+char* match_regex(regex_t *pexp, char *sz) {
+	regmatch_t matches[MAX_MATCHES]; //A list of the matches in the string (a list of 1)
+	//Compare the string to the expression
+	//regexec() returns 0 on match, otherwise REG_NOMATCH
+	//timestamp auf heap
+	char* timestamp = malloc(sizeof(char) * 11);
+	
 
-	//Allocate allNumbers
-	if (allNumbers==NULL) {
-		//Not returning from a checkpoint, allocate memory for allNumbers
-		allNumbers = malloc(100 * sizeof(char));
+	if (regexec(pexp, sz, MAX_MATCHES, matches, 0) == 0) {
+		printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
+		memcpy( timestamp, &sz[11], 10);
+		timestamp[10] = '\0';
+		printf("match timestamp: %s\n",timestamp);
+		return timestamp;
+	} else {
+		printf("\"%s\" does not match\n", sz);
+		return NULL;
 	}
+}
 
-  	char dataNames[100*100];
-
-   	DIR *d;
+int getDataNames(char* dataNames ){
+	DIR *d;
   	struct dirent *dir;
   	int i = 0;
   	d = opendir(".");
@@ -117,7 +126,45 @@ int restore() {
     		}
 
     	closedir(d);
+  	}else{
+  		perror("Error while opening the dir");
   	}
+  	return i;
+}
+
+int getTimestamp( int i, int timeStampArray[], char* dataNames, regex_t exp){
+	char* matchRet;
+	int l=0;
+	for(int k=0;k<i;k++)
+    {
+    	char timestamp[15];
+    	//printf(" %s \n",dataNames+k*100);
+    	matchRet = match_regex(&exp, dataNames+k*100);
+    	
+		
+    	
+    	if(matchRet != 0){
+    		timeStampArray[l] = atoi (matchRet);
+    		printf("match: %i \n", timeStampArray[l]);
+    		l++;
+    	}
+    }
+    return l;
+}
+
+int restore() {
+	//Reserved to check for functions' errors
+	int ret = 0;
+
+	//Allocate allNumbers
+	if (allNumbers==NULL) {
+		//Not returning from a checkpoint, allocate memory for allNumbers
+		allNumbers = malloc(100 * sizeof(char));
+	}
+
+	int i;
+  	char* dataNames = malloc(sizeof(char)*100*100);
+  	i = getDataNames (dataNames);
 
 	int rv;
 	regex_t exp; // compiled expression
@@ -127,41 +174,34 @@ int restore() {
 		printf("regcomp failed with %d\n", rv);
 	}
 
-	char* matchRet;
-	int timeStampArray[100],l=0;
-	for(int k=0;k<i;k++)
-    {
-    	char timestamp[15];
-    	//printf(" %s \n",dataNames+k*100);
-    	matchRet = match(&exp, dataNames+k*100);
-    	memcpy( timestamp, &matchRet[11], 10);
-		timestamp[10] = '\0';
-		printf("restore tmestamp: %s\n",timestamp);
-    	if(matchRet != 0){
-    		timeStampArray[l] = matchRet;
-    		printf("match: %i \n", timeStampArray[l]);
-    		l++;
-    	}
-    }
+	int timeStampArray[100];
+	int l = getTimestamp(i, timeStampArray, dataNames, exp);
     // Free Expression
 	regfree(&exp);
 
   	//search for latest Timestamp
   	int highestTimeStamp=0;
   
-  	for(int m=0;m<sizeof(timeStampArray);m++)
+  	for(int m=0;m<l;m++)
     {
         if(timeStampArray[m]>highestTimeStamp)
         	highestTimeStamp=timeStampArray[m];
 
     }
 	printf("%i\n", highestTimeStamp);
+
+	ret = sprintf(filename, "checkpoint.%i.dat", highestTimeStamp);
+	if (ret < 0){
+		perror("Error: sprintf could not write\n");
+		return;
+	}
+
 	//Get the output file or create a new one
-	FILE* inputF = fopen("checkpoint.dat", "r");
+	FILE* inputF = fopen(filename, "r");
 
 	//Check of the file could be opened
 	if(inputF == NULL){
-		perror("Error: fopen failed to open the \"checkpoint.dat\" file! \n");
+		perror("Error: fopen failed to open the checkpoint file! \n");
 		return -1;
 	}
 
@@ -194,24 +234,7 @@ int restore() {
 	ret = working();
 	return ret;
 }
-void match(regex_t *pexp, char *sz) {
-	regmatch_t matches[MAX_MATCHES]; //A list of the matches in the string (a list of 1)
-	//Compare the string to the expression
-	//regexec() returns 0 on match, otherwise REG_NOMATCH
-	char timestamp[15];
-	
 
-	if (regexec(pexp, sz, MAX_MATCHES, matches, 0) == 0) {
-		//printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
-		memcpy( timestamp, &sz[11], 10);
-		timestamp[10] = '\0';
-		printf("match timestamp: %s\n",timestamp);
-		return sz;
-	} else {
-		printf("\"%s\" does not match\n", sz);
-		return 0;
-	}
-}
 
 int writeOnOPFile(char* outputText){
 	printf("Writing output to %s..", outputFN);
@@ -462,6 +485,40 @@ int working(){
 int monitoring(){
 	int forkPID;
 	bool useCheckpoint = false;
+	int ret = 0;
+
+	//Delete all checkpoint files
+	int i;
+  	char* dataNames = malloc(sizeof(char)*100*100);
+  	i = getDataNames (dataNames);
+
+	int rv;
+	regex_t exp; // compiled expression
+	// Compile expression.
+	rv = regcomp(&exp, "checkpoint.*.dat", REG_EXTENDED);
+	if (rv != 0) {
+		printf("regcomp failed with %d\n", rv);
+	}
+
+	int timeStampArray[100];
+	int l = getTimestamp(i, timeStampArray, dataNames, exp);
+    // Free Expression
+	regfree(&exp);
+
+	for(int m=0;m<l;m++)
+    {
+    	ret = sprintf(filename, "checkpoint.%i.dat", timeStampArray[m]);
+		if (ret < 0){
+			perror("Error: sprintf could not write\n");
+		return;
+	}
+        ret = unlink(filename);
+			if (ret != 0){
+				perror("Error: could not unlink!\n");
+				continue;
+			}
+
+    }
 
 	//Keep monitoring forever until the worker succeeds
 	while(1){
