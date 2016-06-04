@@ -20,7 +20,7 @@ exec: prog
 	sudo ./$(EXEC) text.txt 3 #checkpoints every 3 sec
 
 test: prog
-	EXEC=$(EXEC) opfn=test.txt cpi=3 ./$(TEST)
+	sudo EXEC=$(EXEC) opfn=test.txt cpi=3 ./$(TEST) | sudo ./$(EXEC) test.txt 3
 
 
 .PHONY: clean
