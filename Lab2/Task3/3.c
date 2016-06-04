@@ -31,24 +31,11 @@ time_t last_time;
 //Reserved for the already generated numbers
 char* allNumbers = NULL;
 
-//Reserved for the state info for checkpoints
-int c_i=0;
-int c_n=0;
-
 int checkpoint(int signum) {
 	//Reserved to check for functions' errors
 	int ret = 0;
 
-	//the output text for i and n
-	char loop_state[2];
 	char formatedTime[26];
-	sprintf(loop_state, "%i%i", c_i,c_n);
-	printf("loop_state: %s\n", loop_state);
-
-	//whole output
-	char outputText[102];
-	strncpy(outputText,loop_state,2);
-	strncpy(outputText + 2,allNumbers,100);
 
 	//Get the current time
 	time_t t_ret = time(0);
@@ -61,8 +48,6 @@ int checkpoint(int signum) {
 		return;
 	}
 
-	printf("Writing %s\n", outputText);
-
 	//Get the output file or create a new one
 	FILE* outputF = fopen(filename, "wb"); //open in wb mode so we overwrite every time
 	//Check of the file could be opened
@@ -71,14 +56,13 @@ int checkpoint(int signum) {
 		return -1;
 	}
 
-	
-
-	//Print the state-string in the output file
-
-	ret = fprintf(outputF, "%s", outputText);
-	if(ret < 0){
-		perror("Error: fprintf could not write\n");
-		return -1;
+	//Print the state-string in the output file if allNumbers contains numbers
+	if (allNumbers != NULL && allNumbers[0] != '\0') {
+		ret = fprintf(outputF, "%s", allNumbers);
+		if(ret < 0){
+			perror("Error: fprintf could not write\n");
+			return -1;
+		}
 	}
 
 	//Close the output file
@@ -88,6 +72,7 @@ int checkpoint(int signum) {
 		return -1;
 	}
 
+	printf("Wrote checkpoint %s\n", filename);
 	return 0;
 }
 
@@ -100,13 +85,13 @@ char* match_regex(regex_t *pexp, char *sz) {
 	
 
 	if (regexec(pexp, sz, MAX_MATCHES, matches, 0) == 0) {
-		printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
+		//printf("\"%s\" matches characters %d - %d\n", sz, matches[0].rm_so, matches[0].rm_eo);
 		memcpy( timestamp, &sz[11], 10);
 		timestamp[10] = '\0';
-		printf("match timestamp: %s\n",timestamp);
+		//printf("match timestamp: %s\n",timestamp);
 		return timestamp;
 	} else {
-		printf("\"%s\" does not match\n", sz);
+		//printf("\"%s\" does not match\n", sz);
 		return NULL;
 	}
 }
@@ -145,7 +130,7 @@ int getTimestamp( int i, int timeStampArray[], char* dataNames, regex_t exp){
     	
     	if(matchRet != 0){
     		timeStampArray[l] = atoi (matchRet);
-    		printf("match: %i \n", timeStampArray[l]);
+    		//printf("match: %i \n", timeStampArray[l]);
     		l++;
     	}
     }
@@ -158,8 +143,9 @@ int restore() {
 
 	//Allocate allNumbers
 	if (allNumbers==NULL) {
-		//Not returning from a checkpoint, allocate memory for allNumbers
+		//allocate memory for allNumbers
 		allNumbers = malloc(100 * sizeof(char));
+		allNumbers[0] = '\0';
 	}
 
 	int i;
@@ -188,7 +174,7 @@ int restore() {
         	highestTimeStamp=timeStampArray[m];
 
     }
-	printf("%i\n", highestTimeStamp);
+	//printf("%i\n", highestTimeStamp);
 
 	ret = sprintf(filename, "checkpoint.%i.dat", highestTimeStamp);
 	if (ret < 0){
@@ -201,13 +187,14 @@ int restore() {
 
 	//Check of the file could be opened
 	if(inputF == NULL){
-		perror("Error: fopen failed to open the checkpoint file! \n");
-		return -1;
+		perror("Error: fopen failed to open the checkpoint file or no checkpoint file found! \n");
+		ret = working();
+		return ret;
 	}
 
-	char inputText[102];
+	char inputText[100];
 
-	ret = fread(inputText,sizeof(char),102,inputF);
+	ret = fread(inputText,sizeof(char),100,inputF);
 	if(ret < 0){
 		perror("Error: fread could not read\n");
 		return -1;
@@ -216,20 +203,16 @@ int restore() {
 	//strncpy(inputText + ret,"\0",1);
 	inputText[ret]='\0';
 
-	printf("restoring %s\n", inputText);
-
 	//Close the input file
 	ret = fclose(inputF);
 	if(ret < 0){
 		perror("Error: could not close the input file!\n");
 		return -1;
 	}
-	c_i = inputText[0] - '0'; //convert to int
-	c_n = inputText[1] - '0';
-	printf("i and n: %d %d\n", c_i, c_n);
-	strcpy(allNumbers,inputText + 2);//*sizeof(char));
 
-	printf("restored %d %d %s\n", c_i, c_n, allNumbers);
+	strcpy(allNumbers,inputText);//*sizeof(char));
+
+	printf("restored %s\n", allNumbers);
 
 	ret = working();
 	return ret;
@@ -368,20 +351,20 @@ void makeACheckpoint(int signum){
 }
 
 int working(){
+	//Defining the max number of character to be store in allNumbers
+	int MAX_SIZE = 100;
+
+	if (allNumbers==NULL) {
+		//Not returning from a checkpoint, allocate memory for allNumbers
+		allNumbers = malloc(MAX_SIZE * sizeof(char));
+		allNumbers[0] = '\0';
+	}
+
 	//dump everytime we get a 10 signal
 	struct sigaction dumpAction;
 	dumpAction.sa_handler = checkpoint;
 	sigaction(SIGUSR1, &dumpAction, NULL);
 	printf("Worker: Starting to work!\n");
-	//Defining the max number of character to be store in allNumbers
-	int MAX_SIZE = 100;
-	bool return_to_loop=false;
-
-
-	if (allNumbers==NULL) {
-		//Not returning from a checkpoint, allocate memory for allNumbers
-		allNumbers = malloc(MAX_SIZE * sizeof(char));
-	}
 	
 	//Defining the max number of characters as input (integer with '-')
 	int MAXINPUT = 11;
@@ -391,32 +374,6 @@ int working(){
 					
 	//Initial the range to get different seeds
 	srand(getpid());
-
-	if (c_n != 0 && c_i < c_n) {
-		//Returning from a checkpoint taken from the inside of the loop
-		//TODO what if allNumbers has already been enhanced?
-
-		//Create remaining random numbers
-		for(; c_i < c_n ; ++c_i){
-			//Get a random number smaller than n
-			int r = rand() % (c_n+1);
-			//Concatenate the integer r with the return char
-			char rStr[MAXINPUT];
-			int ret = sprintf(rStr, "%d\n", r);
-			if(ret < 0)
-				perror("Error: sprintf failed");
-			//TODO: check if failed or check MAX_SIZE
-			if((strlen(allNumbers)+MAXINPUT+1) > MAX_SIZE)
-				perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
-		
-			//Add this new number(with return char) to all generated numbers					
-			strncat(allNumbers, rStr, MAXINPUT);
-			printf("%d\n", r);
-		}
-		//reset parameters to tell checkpointing that we're outside the loop
-		c_n = 0;
-		c_i = 0;
-	}
 
 	//Loop forever and exit in some conditions
 	while(1){
@@ -431,24 +388,26 @@ int working(){
 				makeACheckpoint();
 			}*/
 
+			int n;
+
 			//Convert the input to integer
-			int parsed = sscanf(input, "%d", &c_n);
+			int parsed = sscanf(input, "%d", &n);
 			
 			//Check if conversion was successful 
 			if(parsed >= 1){
-				//To save the following generated numbers as a string
-				char* genNums = "#";
+
+				int i;
 
 				//Check the input number
-				if(c_n < 0)
+				if(n < 0)
 					//Exit with returning the value n
-					exit(c_n);
+					exit(n);
 				else {
 
 					//Create n random numbers
-					for(c_i=0 ; c_i < c_n ; ++c_i){
+					for(i=0 ; i < n ; ++i){
 						//Get a random number smaller than n
-						int r = rand() % (c_n+1);
+						int r = rand() % (n+1);
 
 						//Concatenate the integer r with the return char
 						char rStr[MAXINPUT];
@@ -459,15 +418,10 @@ int working(){
 						//TODO: check if failed or check MAX_SIZE
 						if((strlen(allNumbers)+MAXINPUT+1) > MAX_SIZE)
 							perror("Caution: The buffer of the generated numbers 'allNumbers' is full");
-						
 						//Add this new number(with return char) to all generated numbers						
 						strncat(allNumbers, rStr, MAXINPUT);
-
 						printf("%d\n", r);
 					}
-					//reset parameters to tell checkpointing that we're outside the loop
-					c_n = 0;
-					c_i = 0;
 				}	
 			} else {
 				//Write all generated numbers on the output file
@@ -559,8 +513,8 @@ int monitoring(){
 
 			if(waitPID < 0)
 				perror("Error: waitpid couldn't let the monitor wait until the worker has finished");
-			else if(WIFEXITED(status))
-				if(WEXITSTATUS(status)){
+			else if(WIFEXITED(status)) {
+				if(WEXITSTATUS(status)) {
 					/* //Commented for Task3
 					//Monitor: This worker failed
 					//Set CRIU options before restoring the last safe state
@@ -586,12 +540,28 @@ int monitoring(){
 					else { //parent
 						useCheckpoint = true;
 					}
-					
 				} else {
 					//Monitor: The worker succeeded!
 					exit(0);
 				}
-		}
+					
+			} else if (WIFSIGNALED(status) || WIFSTOPPED(status)) { //child killed by signal, sometimes get signal 10: BUS error (bad memory access).
+	            perror("Child terminated unexpectedly!");
+	            //Restore the worker from last safe state
+				forkPID = fork();
+				if(forkPID < 0){
+					perror("Error: fork couldn't create a child!");
+					//Loop again
+					continue;
+				} 
+				else if(forkPID==0) { //child
+					restore();
+				}
+				else { //parent
+					useCheckpoint = true;
+				}
+	        }
+	    }
 	}
 }
 
