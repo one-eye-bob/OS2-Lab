@@ -1,4 +1,3 @@
-#include <criu/criu.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -12,6 +11,7 @@
 #include <unistd.h>
 #include <dirent.h> 
 #include <regex.h>
+#include <stdbool.h>
 
 //The maximum number of matches allowed in a single string
 int MAX_MATCHES =1;
@@ -31,7 +31,9 @@ time_t last_time;
 //Reserved for the already generated numbers
 char* allNumbers = NULL;
 
-int checkpoint(int signum) {
+int working();
+
+void checkpoint(int signum) {
 	//Reserved to check for functions' errors
 	int ret = 0;
 
@@ -42,7 +44,7 @@ int checkpoint(int signum) {
 	if(t_ret < 0)
 		perror("Error: the function 'checkpoint' failed to set 't_ret'");
 
-	ret = sprintf(filename, "%s.%d.dat", "checkpoint", t_ret);
+	ret = sprintf(filename, "%s.%ld.dat", "checkpoint", t_ret);
 	if (ret < 0){
 		perror("Error: sprintf could not write\n");
 		return;
@@ -53,7 +55,7 @@ int checkpoint(int signum) {
 	//Check of the file could be opened
 	if(outputF == NULL){
 		perror("Error: fopen failed to open the \"checkpoint.dat\" file! \n");
-		return -1;
+		return;
 	}
 
 	//Print the state-string in the output file if allNumbers contains numbers
@@ -61,7 +63,7 @@ int checkpoint(int signum) {
 		ret = fprintf(outputF, "%s", allNumbers);
 		if(ret < 0){
 			perror("Error: fprintf could not write\n");
-			return -1;
+			return;
 		}
 	}
 
@@ -69,11 +71,10 @@ int checkpoint(int signum) {
 	ret = fclose(outputF);
 	if(ret < 0){
 		perror("Error: could not close the output file!\n");
-		return -1;
+		return;
 	}
 
 	printf("Wrote checkpoint %s\n", filename);
-	return 0;
 }
 
 char* match_regex(regex_t *pexp, char *sz) {
@@ -96,6 +97,7 @@ char* match_regex(regex_t *pexp, char *sz) {
 	}
 }
 
+//fill dataNames with the names of the files in this directory
 int getDataNames(char* dataNames ){
 	DIR *d;
   	struct dirent *dir;
@@ -117,20 +119,17 @@ int getDataNames(char* dataNames ){
   	return i;
 }
 
+//fill timeStampArray with all timestamps of the checkpoints found in dataNames
 int getTimestamp( int i, int timeStampArray[], char* dataNames, regex_t exp){
 	char* matchRet;
 	int l=0;
 	for(int k=0;k<i;k++)
     {
     	char timestamp[15];
-    	//printf(" %s \n",dataNames+k*100);
     	matchRet = match_regex(&exp, dataNames+k*100);
-    	
-		
-    	
+    	   	
     	if(matchRet != 0){
     		timeStampArray[l] = atoi (matchRet);
-    		//printf("match: %i \n", timeStampArray[l]);
     		l++;
     	}
     }
@@ -143,7 +142,6 @@ int restore() {
 
 	//Allocate allNumbers
 	if (allNumbers==NULL) {
-		//allocate memory for allNumbers
 		allNumbers = malloc(100 * sizeof(char));
 		allNumbers[0] = '\0';
 	}
@@ -174,12 +172,11 @@ int restore() {
         	highestTimeStamp=timeStampArray[m];
 
     }
-	//printf("%i\n", highestTimeStamp);
 
 	ret = sprintf(filename, "checkpoint.%i.dat", highestTimeStamp);
 	if (ret < 0){
 		perror("Error: sprintf could not write\n");
-		return;
+		return ret;
 	}
 
 	//Get the output file or create a new one
@@ -188,8 +185,7 @@ int restore() {
 	//Check of the file could be opened
 	if(inputF == NULL){
 		perror("Error: fopen failed to open the checkpoint file or no checkpoint file found! \n");
-		ret = working();
-		return ret;
+		working();
 	}
 
 	char inputText[100];
@@ -199,8 +195,8 @@ int restore() {
 		perror("Error: fread could not read\n");
 		return -1;
 	}
+
 	//write \0 terminator
-	//strncpy(inputText + ret,"\0",1);
 	inputText[ret]='\0';
 
 	//Close the input file
@@ -210,12 +206,11 @@ int restore() {
 		return -1;
 	}
 
-	strcpy(allNumbers,inputText);//*sizeof(char));
+	strcpy(allNumbers,inputText);
 
-	printf("restored %s\n", allNumbers);
+	printf("restored worker process!\n");
 
-	ret = working();
-	return ret;
+	working();
 }
 
 
@@ -252,102 +247,6 @@ int writeOnOPFile(char* outputText){
 	printf("Done.\n");
 
 	return 0;
-}
-
-
-int isAllowedToCheckpoint() {
-	//Reserved for the current time
-	time_t current_time;
-
-	//Reserved to calculate the differnce in seconds
-	int difference;
-
-	//Check if the last time was NOT set
-	if(last_time == 0){
-		//Take the first checkpoint
-		return 1;
-	}
-
-	//Get the current time
-	current_time = time(0);
-	if(current_time < 0)
-		perror("Error: the function 'time' failed to set 'current_time'");
-
-	//Calculate the difference between these times (in seconds)
-	difference = current_time - last_time;
-	
-	//Is the last checkpoint time old
-	if(difference >= cpInterval){
-		//Free to take a new checkpoint
-		return 1;
-	}
-
-	//It is too soon
-	return 0;
-}
-
-void setCriuOptions(){
-	//Reserved for the file descriptor
-	int fd;
-
-	//Open if "checkpoints" is a directory, or fail
-	fd = open("checkpoints", O_DIRECTORY);
-
-	//Check if open didn't fail
-	if(fd == -1){
-		perror("Error: open failed to open the 'checkpoints' directory.\n");
-		//return -1;	
-	}
-
-	//Set up criu options
-	int ret = criu_init_opts();
-	if(ret == -1){
-		perror("Error: criu_init_opts failed to inital the request options.\n");
-	}
-
-	//Set the images directory, where they will be stored
-	criu_set_images_dir_fd(fd);
-
-	//Specify the CRIU service socket
-	criu_set_service_address("criu_service.socket");
-
-	//Specify how to connnect to service socket
-	criu_set_service_comm(CRIU_COMM_SK);
-	
-	//Make it to continue executing after dumping
-	criu_set_leave_running(true);
-
-	//Make it a shell job, since criu would be unable to dump otherwise
-	criu_set_shell_job(true);
-}
-
-void makeACheckpoint(int signum){
-	//Reserved to check for funtions's errors
-	int ret;
-	
-	//Check if criu need to be initalized
-	if(last_time == 0){
-		//Preparation for CRIU for the first time:
-	
-		//Create the "checkpoints" directory if it doesn't exist, only owner has (full) access
-		mkdir("checkpoints", 0700);
-
-		//Set CRIU options
-		setCriuOptions();
-	}
-	
-	//Make a checkpoint
-	ret = criu_dump();
-	if(ret < 0){
-		perror("Error: criu_dump failed!");
-	} else{
-		printf("Successfully took huge dump!\n");
-	}
-	
-	//Set last_time to this time
-	last_time = time(0);
-	if(last_time < 0)
-		perror("Error: the function 'time' failed to set 'last_time'");
 }
 
 int working(){
@@ -464,14 +363,13 @@ int monitoring(){
     	ret = sprintf(filename, "checkpoint.%i.dat", timeStampArray[m]);
 		if (ret < 0){
 			perror("Error: sprintf could not write\n");
-		return;
-	}
+			return ret;
+		}
         ret = unlink(filename);
-			if (ret != 0){
-				perror("Error: could not unlink!\n");
-				continue;
-			}
-
+		if (ret != 0){
+			perror("Error: could not unlink!\n");
+			continue;
+		}
     }
 
 	//Keep monitoring forever until the worker succeeds
@@ -495,38 +393,20 @@ int monitoring(){
 
 			int waitPID;
 			do {
-				printf("Monitor: Wait before making a checkpoint!\n");
+				//printf("Monitor: Wait before making a checkpoint!\n");
 				usleep(cpInterval*1000000);
-				printf("Monitor: Send a siganl to make a checkpoint!\n");
+				//printf("Monitor: Send a siganl to make a checkpoint!\n");
 				//time to send dump request
 				kill(forkPID, SIGUSR1);
-				//printf("Monitor: wait for the worker to respond!\n");
-				//set an alarm, so the waiting process is regularly interrupted to send dump requests to the worker
-				//alarm(cpInterval);	
 				//Wait for the worker until it terminates
 				waitPID = waitpid((pid_t)forkPID, &status, WNOHANG);
 			//wait again if the process was interrupted by alarm
 			} while (waitPID == 0 );
-			
-			//Wait for the worker until it terminates
-			//waitPID = waitpid((pid_t)forkPID, &status, 0);
 
 			if(waitPID < 0)
 				perror("Error: waitpid couldn't let the monitor wait until the worker has finished");
 			else if(WIFEXITED(status)) {
 				if(WEXITSTATUS(status)) {
-					/* //Commented for Task3
-					//Monitor: This worker failed
-					//Set CRIU options before restoring the last safe state
-					setCriuOptions();
-
-					//Restore the worker from last safe state
-					if((forkPID = criu_restore_child()) < 0) {
-						perror("Error: criu_restore_child failed to restore child!\n");
-					}else{
-						printf("Successfully restored child with pid: %d\n", forkPID);
-						useCheckpoint = true;
-					}*/
 					//Restore the worker from last safe state
 					forkPID = fork();
 					if(forkPID < 0){
@@ -545,7 +425,7 @@ int monitoring(){
 					exit(0);
 				}
 					
-			} else if (WIFSIGNALED(status) || WIFSTOPPED(status)) { //child killed by signal, sometimes get signal 10: BUS error (bad memory access).
+			} else if (WIFSIGNALED(status) || WIFSTOPPED(status)) { //child killed by signal
 	            perror("Child terminated unexpectedly!");
 	            //Restore the worker from last safe state
 				forkPID = fork();

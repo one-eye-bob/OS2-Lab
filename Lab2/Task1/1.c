@@ -8,8 +8,15 @@ int main(){
 	//Reserved for the file descriptor
 	int fd;
 	
+	//Reserved to check the failures for the following functions
+	int ret;
+	
 	//Create the "dump" directory if it doesn't exist, only owner has (full) access
-	mkdir("dump", 0700);
+	ret = mkdir("dump", 0700);
+	if(ret == -1){
+		perror("Error: Could not create dump folder.\n");
+		return -1;
+	}
 	
 	//Open if "dump" is a directory, or fail
 	fd = open("dump", O_DIRECTORY);
@@ -19,9 +26,6 @@ int main(){
 		perror("Error: open failed to open the 'dump' directory.\n");
 		return -1;	
 	}
-
-	//Reserved to check the failures for the following functions
-	int ret;
 	
 	//Preparation for CRIU:
 	//Initial the request options
