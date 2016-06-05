@@ -4,4 +4,4 @@ you come up with ways to check if the data restored from a checkpoint file is in
 consistent? Can you think of a way to check if a checkpoint has been corrupted, even if the
 resulting state may still be internally consistent?
 
-If the file is broken the previous state can't be restored. The data stored in the files are based on a common layout therefore it is possible to check if the input of the file is internally consistent. You can also search for invalid values in the file. 
+If the file is broken the previous state can't be restored. The data stored in the files are based on a common layout therefore it is possible to check if the input of the file is internally consistent. You can also search for invalid values in the file. In order to find a corrupted file even through it is internally consistent one can compare the date of creation and the date of the last modification.
