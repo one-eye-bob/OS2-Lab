@@ -1,0 +1,7 @@
+How does your implementation react to broken checkpoint files? Try overwriting a
+checkpoint.timestamp.dat with random data and see how your program behaves. Can
+you come up with ways to check if the data restored from a checkpoint file is internally
+consistent? Can you think of a way to check if a checkpoint has been corrupted, even if the
+resulting state may still be internally consistent?
+
+If the file is broken the previous state can't be restored. The data stored in the files are based on a common layout therefore it is possible to check if the input of the file is internally consistent. You can also search for invalid values in the file. 
