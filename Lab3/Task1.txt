@@ -1,0 +1,25 @@
+Question 1.1:
+The topics of the two papers are the Fault Injection-tools GRINDER and PAIN. They can be used to
+evaluate the robustness (i.e. the ability to cope with external faults) of components of a software.
+ GRINDER is a generalist tool that is intended to be highly reusable for different kinds of software and
+to be independent from the software under test. PAIN is not a generalist tool, it exploits parallel hardware to execute multiple FI experiments
+at a time. By that PAIN achieves a tradeoff  between increased throughput and accuracy, as it assumes non-
+interference among the simultaniousely executed experiments.
+
+Question 1.2:
+GRINDER is a generalist Fault Injection-tool that, contrary to most other FI-tools, is highly reusable. 
+Therefore the big advantage of it is that it is intended to be applicable to any software with a low cost of
+applying it to the software.
+
+Question 1.3:
+The purpose of the PAIN experiments is to investigate the tradeoff between increased throughput and accuracy.
+It is investigated wether the throughput is higher in a parallel environment, wether the results are dependent
+of the increase in that environment and wether the increase leads to an increase in heterogenity among repeated injection campaigns.
+
+Question 1.4:
+The throughput is higher in the parallel case but the results are dependent of that increase,
+the results are dependent of the increase and an increase of heterogenity among repeated injection campaigns is observed.
+It is noted that a correct setup/tuning of parallel experiments may prove difficult and requires special care. A very important observation is
+that there are cases when parallelism can change the results even after repetitions.
+Therefore the conclusion is that the parallel execution of FI experiments can improve the throughput, but can also affect the accuracy of results. Hence,
+careful tuning of the degree of parallelism is required to avoid negative effects on accuracy.
